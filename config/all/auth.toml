@@ -1,0 +1,17 @@
+[Repo]
+Default = "gorm"
+
+[Repo.Gorm]
+Driver = "gorm"
+
+[Jwter]
+Default = "JwtGo"
+
+[Jwter.JwtGo]
+Driver = "github.com/dgrijalva/jwt-go"
+# option: HS512/HS384/HS512
+SigningMethod = "HS512"
+SigningKey = "dawn......"
+Expired = 3600e9
+# cache store
+Store = "local"

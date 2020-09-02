@@ -1,0 +1,15 @@
+Default = "yunpian"
+
+[Senders]
+[Senders.yunpian]
+Apikey = ""
+
+# 短信验证码验证
+[Verifier]
+Store = "testing"
+# 短信验证码有效时长
+ExpiredDuration = 300e9
+# 短信验证码前缀
+Prefix = ""
+# 短信验证码长度
+CodeLength = 4

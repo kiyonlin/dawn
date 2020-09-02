@@ -1,0 +1,29 @@
+[Default]
+Preload        = true
+Host           = "127.0.0.1"
+Port           = "6379"
+Password       = ""
+Database       = 0
+ReadTimeout    = 0
+WriteTimeout   = 0
+ConnectTimeout = 0
+[Default.Pool]
+MaxIdle     = 0
+MaxActive   = 0
+IdleTimeout = 0
+Wait        = false
+
+[Cache]
+Preload        = false
+Host           = "127.0.0.1"
+Port           = "6379"
+Password       = ""
+Database       = 1
+ReadTimeout    = 0
+WriteTimeout   = 0
+ConnectTimeout = 0
+[Cache.Pool]
+MaxIdle     = 0
+MaxActive   = 0
+IdleTimeout = 0
+Wait        = false

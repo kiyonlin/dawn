@@ -1,0 +1,6 @@
+# "dev" "production"
+Env = "dev"
+# 是否调试模式
+Debug = true
+# 环境变量前缀
+EnvPrefix = ""

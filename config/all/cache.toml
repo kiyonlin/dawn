@@ -1,0 +1,20 @@
+Default = "testing"
+
+[Stores]
+[Stores.local]
+Preload = false
+Driver = "file"
+Prefix = "dawn_"
+FilePath = "./data/dawn_store"
+
+[Stores.testing]
+Preload = true
+Driver = "file"
+Prefix = "dawn_"
+FilePath = ":memory:"
+
+[Stores.redis]
+Preload = false
+Driver = "redis"
+Prefix = "dawn_"
+Connection = "default"
