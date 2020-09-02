@@ -73,7 +73,7 @@ func (s *Server) RunTls(addr, certFile, keyFile string) error {
 	}
 	config := &tls.Config{
 		Certificates: []tls.Certificate{cert},
-		MinVersion:   tls.VersionTLS10,
+		MinVersion:   tls.VersionTLS12,
 	}
 
 	return s.setup().app.Listener(ln, config)
