@@ -24,7 +24,9 @@ func InitFlags() {
 
 	logDir := flag.Lookup("log_dir").Value.String()
 
-	if err := os.MkdirAll(logDir, 0755); err != nil {
+	// Directory permissions should be 0750 or less
+	// for security issue
+	if err := os.MkdirAll(logDir, 0750); err != nil {
 		panic(fmt.Errorf("log: failed to mkdir with %s: %w", logDir, err))
 	}
 
