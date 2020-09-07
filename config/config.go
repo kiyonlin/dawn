@@ -2,15 +2,16 @@ package config
 
 import (
 	"bytes"
-	_ "github.com/joho/godotenv/autoload"
-	"github.com/mitchellh/mapstructure"
-	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	_ "github.com/joho/godotenv/autoload"
+	"github.com/mitchellh/mapstructure"
+	"github.com/pkg/errors"
+	"github.com/spf13/viper"
 )
 
 type (
