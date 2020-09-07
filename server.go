@@ -34,7 +34,7 @@ func New(opts ...Option) *Server {
 // - Logger
 // - Recovery
 // - Pprof
-// middleware already attached.
+// middleware already attached in default fiber app.
 func Default() *Server {
 	app := fiber.New()
 	app.Use(
