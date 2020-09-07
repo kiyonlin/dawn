@@ -87,6 +87,11 @@ func (s *Server) Shutdown() error {
 	return s.app.Shutdown()
 }
 
+// Router returns the server router
+func (s *Server) Router() fiber.Router {
+	return s.app
+}
+
 func (s *Server) setup() *Server {
 	return s.init().boot().registerRoutes()
 }

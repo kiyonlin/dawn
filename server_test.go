@@ -78,3 +78,8 @@ func Test_Server_Shutdown(t *testing.T) {
 	require.NotNil(t, (&Server{}).Shutdown())
 	require.NotNil(t, New().Shutdown())
 }
+
+func Test_Server_Router(t *testing.T) {
+	require.Nil(t, (&Server{}).Router())
+	require.NotNil(t, New().Router())
+}
