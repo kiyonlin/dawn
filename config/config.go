@@ -2,6 +2,7 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,7 +39,7 @@ func New() *Config {
 }
 
 // Load config
-func Load(configPath string, configName ...string) error {
+func Load(configPath string, configName ...string) *Config {
 	v := viper.New()
 
 	name := "config"
@@ -49,12 +50,12 @@ func Load(configPath string, configName ...string) error {
 	v.SetConfigName(name)
 	v.AddConfigPath(configPath)
 	if err := v.ReadInConfig(); err != nil {
-		return errors.Wrapf(err, "failed to read in %s", name)
+		panic(fmt.Errorf("config: failed to read in %s: %w", name, err))
 	}
 
 	global = &Config{v: v}
 
-	return nil
+	return global
 }
 
 // Load all config contents in the dir path
@@ -325,9 +326,7 @@ func Sub(key string) *Config {
 	return global.Sub(key)
 }
 
-// Sub 获取子配置，并设置相应的环境变量
-// 目前支持config.Sub("key1.key2")的环境变量设置
-// 但不支持config.Sub("key1").Sub("key2")的环境变量设置
+// Sub gets sub config
 func (c *Config) Sub(key string) *Config {
 	c.mut.RLock()
 	defer c.mut.RUnlock()
@@ -338,13 +337,6 @@ func (c *Config) Sub(key string) *Config {
 	} else {
 		newConf = New()
 	}
-
-	// 子配置加载环境变量时，需要合并配置中的prefix以及子配置的key
-	prefix := key
-	if envPrefix := GetString("app.envPrefix"); envPrefix != "" {
-		prefix = envPrefix + "." + prefix
-	}
-	newConf.LoadEnv(strings.ReplaceAll(prefix, ".", "_"))
 
 	return newConf
 }
@@ -369,9 +361,9 @@ func (c *Config) Has(key string) bool {
 	return c.v.IsSet(key)
 }
 
-// LoadEnv 加载环境变量
-// prefix可以设置环境变量的前缀
-// 环境变量中的值优先级比配置文件中的高
+// LoadEnv loads env from .env or command line
+// Use prefix to avoid conflicts with other env variables
+// Same config key in env will override that in config file
 func LoadEnv(prefix ...string) {
 	global.LoadEnv(prefix...)
 }

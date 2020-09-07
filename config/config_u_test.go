@@ -35,27 +35,25 @@ type (
 	}
 )
 
-func TestLoadReadError(t *testing.T) {
-	nonConfigName := "non config name"
-	err := Load(configPath, nonConfigName)
-	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "failed to read in")
-	assert.Contains(t, err.Error(), nonConfigName)
+func Test_Load_Panic(t *testing.T) {
+	assert.Panics(t, func() {
+		nonConfigName := "non config name"
+		Load(configPath, nonConfigName)
+	})
 }
 
-func TestLoad(t *testing.T) {
+func Test_Load(t *testing.T) {
 	reset()
 
-	err := Load(configPath, configName)
-	assert.Nil(t, err)
+	Load(configPath, configName)
 	assert.Equal(t, value, GetString(key))
 
 	defaultFileStorePath := "./data/dawn_store.db"
 	assert.Equal(t, defaultFileStorePath, GetString("cache.file.path", defaultFileStorePath))
 }
 
-func TestAllGetFunctions(t *testing.T) {
-	require.NoError(t, Load(configPath, configName))
+func Test_AllGetFunctions(t *testing.T) {
+	Load(configPath, configName)
 
 	assert.Equal(t, "iface", Get("iface"))
 	assert.Equal(t, "di", Get(nonExistKey, "di"))
@@ -99,12 +97,12 @@ func TestAllGetFunctions(t *testing.T) {
 	assert.Equal(t, []string{"s3", "s4"}, GetStringSlice(nonExistKey, []string{"s3", "s4"}))
 }
 
-func TestAllSettings(t *testing.T) {
+func Test_AllSettings(t *testing.T) {
 	reset()
 	assert.Len(t, AllSettings(), 0)
 }
 
-func TestUnmarshal(t *testing.T) {
+func Test_Unmarshal(t *testing.T) {
 	reset()
 
 	Set("S", value)
@@ -113,7 +111,7 @@ func TestUnmarshal(t *testing.T) {
 	assert.Equal(t, value, fu.S)
 }
 
-func TestUnmarshalKey(t *testing.T) {
+func Test_UnmarshalKey(t *testing.T) {
 	reset()
 
 	Set("SubConfig.B", true)
@@ -122,25 +120,22 @@ func TestUnmarshalKey(t *testing.T) {
 	assert.True(t, sub.B)
 }
 
-func TestMergeConfigMap(t *testing.T) {
+func Test_MergeConfigMap(t *testing.T) {
 	reset()
 
 	MergeConfigMap(mergeCfg)
 	assert.Equal(t, mergeCfg["merge"], GetString("merge"))
 }
 
-func TestSub(t *testing.T) {
+func Test_Sub(t *testing.T) {
 	reset()
 
 	Set("SubConfig.B", true)
 	c := Sub("SubConfig")
 	assert.True(t, c.GetBool("B"))
-
-	require.NoError(t, os.Setenv("SUBCONFIG_B", "false"))
-	assert.False(t, c.GetBool("B"))
 }
 
-func TestHas(t *testing.T) {
+func Test_Has(t *testing.T) {
 	reset()
 
 	Set("SubConfig.B", true)
@@ -150,11 +145,7 @@ func TestHas(t *testing.T) {
 	assert.False(t, Has("B"))
 }
 
-func reset() {
-	global = New()
-}
-
-func TestLoadAll(t *testing.T) {
+func Test_LoadAll(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
 		assert.NotNil(t, LoadAll("./error"))
 	})
@@ -176,4 +167,8 @@ func TestLoadAll(t *testing.T) {
 
 		assert.Equal(t, true, global.GetBool("http.accesslog"))
 	})
+}
+
+func reset() {
+	global = New()
 }
