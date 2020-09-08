@@ -49,13 +49,25 @@ func Flush() {
 	klog.Flush()
 }
 
-// Errorln logs to the ERROR, and INFO logs.
+// Warningln logs to the WARNING and INFO logs.
+// Arguments are handled in the manner of fmt.Println; a newline is always appended.
+func Warningln(args ...interface{}) {
+	klog.Warningln(args...)
+}
+
+// Warningf logs to the WARNING and INFO logs.
+// Arguments are handled in the manner of fmt.Printf; a newline is appended if missing.
+func Warningf(format string, args ...interface{}) {
+	klog.Warningf(format, args...)
+}
+
+// Errorln logs to the ERROR, WARNING, and INFO logs.
 // Arguments are handled in the manner of fmt.Println; a newline is always appended.
 func Errorln(args ...interface{}) {
 	klog.Errorln(args...)
 }
 
-// Errorf logs to the ERROR, and INFO logs.
+// Errorf logs to the ERROR, WARNING, and INFO logs.
 // Arguments are handled in the manner of fmt.Printf; a newline is appended if missing.
 func Errorf(format string, args ...interface{}) {
 	klog.Errorf(format, args...)
