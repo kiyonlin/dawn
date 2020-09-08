@@ -147,18 +147,18 @@ func Test_Has(t *testing.T) {
 
 func Test_LoadAll(t *testing.T) {
 	t.Run("error", func(t *testing.T) {
-		assert.NotNil(t, LoadAll("./error"))
+		assert.NotNil(t, LoadAll("./testdata/error"))
 	})
 
 	t.Run("success", func(t *testing.T) {
-		assert.Nil(t, LoadAll("./all"))
+		assert.Nil(t, LoadAll("./testdata/all"))
 		assert.True(t, global.Has("http"))
 		assert.True(t, global.Has("auth"))
 		assert.True(t, global.Has("others.1"))
 	})
 
 	t.Run("env", func(t *testing.T) {
-		assert.Nil(t, LoadAll("./all"))
+		assert.Nil(t, LoadAll("./testdata/all"))
 		assert.Equal(t, false, global.GetBool("http.accesslog"))
 
 		LoadEnv("DAWN")
