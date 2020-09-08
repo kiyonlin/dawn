@@ -10,8 +10,6 @@ import (
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/mitchellh/mapstructure"
-	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 )
 
@@ -20,10 +18,6 @@ type (
 		v   *viper.Viper
 		mut sync.RWMutex
 	}
-
-	// A DecoderConfigOption can be passed to Unmarshal to configure
-	// mapstructure.DecoderConfig options
-	DecoderConfigOption func(*mapstructure.DecoderConfig)
 )
 
 var (
@@ -72,7 +66,7 @@ func LoadAll(configPath string) error {
 			v.SetConfigName(name)
 			v.AddConfigPath(dir)
 			if err := v.ReadInConfig(); err != nil {
-				return errors.Wrapf(err, "failed to read in %s", path)
+				return fmt.Errorf("config: failed to read in %s: %w", path, err)
 			}
 
 			rel, _ := filepath.Rel(configPath, path)
@@ -284,34 +278,24 @@ func (c *Config) AllSettings() map[string]interface{} {
 	return c.v.AllSettings()
 }
 
-func Unmarshal(rawVal interface{}, opts ...DecoderConfigOption) error {
-	return global.Unmarshal(rawVal, opts...)
+func Unmarshal(rawVal interface{}) error {
+	return global.Unmarshal(rawVal)
 }
-func (c *Config) Unmarshal(rawVal interface{}, opts ...DecoderConfigOption) error {
+func (c *Config) Unmarshal(rawVal interface{}) error {
 	c.mut.RLock()
 	defer c.mut.RUnlock()
 
-	var args []viper.DecoderConfigOption
-	for _, opt := range opts {
-		args = append(args, viper.DecoderConfigOption(opt))
-	}
-
-	return c.v.Unmarshal(rawVal, args...)
+	return c.v.Unmarshal(rawVal)
 }
 
-func UnmarshalKey(key string, rawVal interface{}, opts ...DecoderConfigOption) error {
-	return global.UnmarshalKey(key, rawVal, opts...)
+func UnmarshalKey(key string, rawVal interface{}) error {
+	return global.UnmarshalKey(key, rawVal)
 }
-func (c *Config) UnmarshalKey(key string, rawVal interface{}, opts ...DecoderConfigOption) error {
+func (c *Config) UnmarshalKey(key string, rawVal interface{}) error {
 	c.mut.RLock()
 	defer c.mut.RUnlock()
 
-	var args []viper.DecoderConfigOption
-	for _, opt := range opts {
-		args = append(args, viper.DecoderConfigOption(opt))
-	}
-
-	return c.v.UnmarshalKey(key, rawVal, args...)
+	return c.v.UnmarshalKey(key, rawVal)
 }
 
 func MergeConfigMap(cfg map[string]interface{}) {
