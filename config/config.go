@@ -53,6 +53,8 @@ func Load(configPath string, configName ...string) *Config {
 		panic(fmt.Errorf("config: failed to read in %s: %w", name, err))
 	}
 
+	v.WatchConfig()
+
 	global = &Config{v: v}
 
 	return global
