@@ -153,19 +153,18 @@ func Test_LoadAll(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 		assert.Nil(t, LoadAll("./testdata/all"))
 		assert.True(t, global.Has("http"))
-		assert.True(t, global.Has("auth"))
 		assert.True(t, global.Has("others.1"))
 	})
 
 	t.Run("env", func(t *testing.T) {
 		assert.Nil(t, LoadAll("./testdata/all"))
-		assert.Equal(t, false, global.GetBool("http.accesslog"))
+		assert.Equal(t, false, global.GetBool("app.debug"))
 
 		LoadEnv("DAWN")
 
-		require.NoError(t, os.Setenv("DAWN_HTTP_ACCESSLOG", "true"))
+		require.NoError(t, os.Setenv("DAWN_APP_DEBUG", "true"))
 
-		assert.Equal(t, true, global.GetBool("http.accesslog"))
+		assert.Equal(t, true, global.GetBool("app.debug"))
 	})
 }
 

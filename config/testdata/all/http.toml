@@ -1,16 +1,4 @@
-# http 服务地址
+# http addr
 Host = "127.0.0.1"
-# http 服务端口
+# http port
 Port = 8888
-# 网络类型 "tcp" "unix"
-Network = "tcp"
-# 是否开启访问日志
-AccessLog = false
-# 暂停服务时的超时时间，等待运行中的服务完成
-ShutDownTimeout = "5s"
-# 是否使用热更新代码功能
-# 若开启，则会启动一个 master 进程和一个 worker 进程
-# master 监听信号量，然后控制 worker 进程
-Graceful = true
-# 默认分页大小
-PageSize = 15

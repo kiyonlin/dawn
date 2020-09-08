@@ -1,6 +1,0 @@
-# trace debug info warn error fatal panic ""(NoLevel)
-Level = "trace"
-LevelFieldName = "lvl"
-TimeFieldFormat = "2006-01-02 15:04:05.000"
-MessageFieldName = "msg"
-ErrorFieldName = "err"
