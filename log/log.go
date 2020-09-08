@@ -2,48 +2,15 @@ package log
 
 import (
 	"flag"
-	"fmt"
 	"io"
-	"os"
-	"path"
-	"time"
 
 	"k8s.io/klog/v2"
 )
 
-var defaultLogFile = func() string {
-	return fmt.Sprintf("logs/%s.log", time.Now().Format("2006-01-02"))
-}()
-
 // InitFlags is for explicitly initializing the flags.
 // Default to use logs as log dir.
-func InitFlags() {
-	klog.InitFlags(nil)
-
-	if f := flag.Lookup("log_file"); f == nil || f.Value.String() == "" {
-		if err := flag.Set("log_file", defaultLogFile); err != nil {
-			panic(fmt.Errorf("log: failed to set log file: %w", err))
-		}
-	}
-
-	logFile := flag.Lookup("log_file").Value.String()
-	dir := path.Dir(logFile)
-	if err := os.MkdirAll(dir, 0750); err != nil {
-		panic(fmt.Errorf("log: failed to create dir %s: %w", dir, err))
-	}
-	f, err := os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0640)
-	if err != nil {
-		panic(fmt.Errorf("log: failed to open file %s: %w", logFile, err))
-	}
-	defer f.Close()
-
-	if err := flag.Set("logtostderr", "false"); err != nil {
-		panic(fmt.Errorf("log: failed to set logtostderr: %w", err))
-	}
-
-	if err := flag.Set("alsologtostderr", "true"); err != nil {
-		panic(fmt.Errorf("log: failed to set alsologtostderr: %w", err))
-	}
+func InitFlags(flagset *flag.FlagSet) {
+	klog.InitFlags(flagset)
 }
 
 // SetOutput sets the output destination for all severities
