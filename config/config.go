@@ -13,12 +13,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-type (
-	Config struct {
-		v   *viper.Viper
-		mut sync.RWMutex
-	}
-)
+// Config is based on spf13/viper
+// and extends by supporting default value
+type Config struct {
+	v   *viper.Viper
+	mut sync.RWMutex
+}
 
 var (
 	global *Config
@@ -32,8 +32,9 @@ func New() *Config {
 	return &Config{v: viper.New()}
 }
 
-// Load config
-func Load(configPath string, configName ...string) *Config {
+// Load config into global environment.
+// Default config name is "config".
+func Load(configPath string, configName ...string) {
 	v := viper.New()
 
 	name := "config"
@@ -50,8 +51,6 @@ func Load(configPath string, configName ...string) *Config {
 	v.WatchConfig()
 
 	global = &Config{v: v}
-
-	return global
 }
 
 // Load all config contents in the dir path
