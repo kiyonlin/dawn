@@ -1,7 +1,7 @@
 package dawn
 
 import (
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 )
 
 // Option can be applied in server

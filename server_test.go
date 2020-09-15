@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/gofiber/fiber"
+	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -75,7 +75,7 @@ func Test_Server_RunTls(t *testing.T) {
 
 func Test_Server_Shutdown(t *testing.T) {
 	require.NotNil(t, (&Server{}).Shutdown())
-	require.NotNil(t, New().Shutdown())
+	require.Nil(t, New().Shutdown())
 }
 
 func Test_Server_Router(t *testing.T) {

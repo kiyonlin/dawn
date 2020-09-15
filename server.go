@@ -3,11 +3,14 @@ package dawn
 import (
 	"crypto/tls"
 	"fmt"
-	"net"
 	"sync"
 
-	"github.com/gofiber/fiber"
-	"github.com/gofiber/fiber/middleware"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/pprof"
+	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/gofiber/fiber/v2/middleware/requestid"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 // Server denotes Dawn web server
@@ -38,10 +41,10 @@ func New(opts ...Option) *Server {
 func Default() *Server {
 	app := fiber.New()
 	app.Use(
-		middleware.RequestID(),
-		middleware.Logger(),
-		middleware.Recover(),
-		middleware.Pprof(),
+		requestid.New(),
+		logger.New(),
+		recover.New(),
+		pprof.New(),
 	)
 
 	return &Server{
@@ -61,11 +64,6 @@ func (s *Server) Run(addr string) error {
 
 // Run runs a tls web server
 func (s *Server) RunTls(addr, certFile, keyFile string) error {
-	ln, err := net.Listen("tcp", addr)
-	if err != nil {
-		return err
-	}
-
 	// Create tls certificate
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
@@ -76,7 +74,13 @@ func (s *Server) RunTls(addr, certFile, keyFile string) error {
 		MinVersion:   tls.VersionTLS12,
 	}
 
-	return s.setup().app.Listener(ln, config)
+	ln, err := tls.
+		Listen("tcp", addr, config)
+	if err != nil {
+		return err
+	}
+
+	return s.setup().app.Listener(ln)
 }
 
 // Shutdown gracefully shuts down the server without interrupting any active connections.
