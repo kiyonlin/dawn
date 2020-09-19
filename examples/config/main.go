@@ -6,12 +6,10 @@ import (
 	"github.com/kiyonlin/dawn/config"
 )
 
-func init() {
+func main() {
 	config.Load("./examples/config")
 	config.LoadEnv("dawn")
-}
 
-func main() {
 	// output: bar
 	log.Println(config.GetString("foo"))
 
