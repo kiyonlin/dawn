@@ -170,6 +170,8 @@ func Logger() fiber.Handler {
 		latency := end.Sub(start).Truncate(time.Microsecond)
 
 		bb := bytebufferpool.Get()
+		defer bytebufferpool.Put(bb)
+
 		// append time
 		bb.B = end.AppendFormat(bb.B, "2006/01/02 15:04:05.000")
 
@@ -223,11 +225,8 @@ func Logger() fiber.Handler {
 			w = os.Stderr
 		}
 
-		go func() {
-			_, _ = bb.WriteTo(w)
-			bytebufferpool.Put(bb)
-		}()
+		_, err = bb.WriteTo(w)
 
-		return nil
+		return
 	}
 }
