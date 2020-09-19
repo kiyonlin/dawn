@@ -6,32 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-playground/locales/en"
-	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
-	ent "github.com/go-playground/validator/v10/translations/en"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
 	"github.com/valyala/bytebufferpool"
 	"github.com/valyala/fasthttp"
 )
-
-var (
-	v     *validator.Validate
-	uni   *ut.UniversalTranslator
-	trans ut.Translator
-)
-
-func init() {
-	v = validator.New()
-
-	uni = ut.New(en.New())
-	trans, _ = uni.GetTranslator("en")
-
-	if err := ent.RegisterDefaultTranslations(v, trans); err != nil {
-		panic(err)
-	}
-}
 
 // ErrHandler is Dawn's error handler
 var ErrHandler = func(c *fiber.Ctx, err error) error {
@@ -69,7 +49,7 @@ func ValidateBody(c *fiber.Ctx, obj interface{}) (err error) {
 		return err
 	}
 
-	return v.Struct(obj)
+	return V.Struct(obj)
 }
 
 // ValidateQuery accepts a obj holds results from QueryParser
@@ -79,7 +59,7 @@ func ValidateQuery(c *fiber.Ctx, obj interface{}) (err error) {
 		return err
 	}
 
-	return v.Struct(obj)
+	return V.Struct(obj)
 }
 
 // Response is a unified format for api results
@@ -95,22 +75,17 @@ type Response struct {
 	Data interface{} `json:"data,omitempty"`
 }
 
-// Resp returns the
-func Resp(c *fiber.Ctx, statusCode int, res ...Response) error {
-	r := Response{}
-	if len(res) > 0 {
-		r = res[0]
+// Resp returns the custom response
+func Resp(c *fiber.Ctx, statusCode int, res Response) error {
+	if res.Code == 0 {
+		res.Code = statusCode
 	}
 
-	if r.Code == 0 {
-		r.Code = statusCode
+	if id := c.Response().Header.Peek(fiber.HeaderXRequestID); len(id) > 0 && res.RequestID == "" {
+		res.RequestID = utils.GetString(id)
 	}
 
-	if id := c.Response().Header.Peek(fiber.HeaderXRequestID); len(id) > 0 {
-		r.RequestID = utils.GetString(id)
-	}
-
-	return c.Status(statusCode).JSON(r)
+	return c.Status(statusCode).JSON(res)
 }
 
 // respCommon

@@ -39,7 +39,7 @@ func Test_Fiberx_ErrorHandler(t *testing.T) {
 				Field2:   "1",
 			}
 
-			return v.Struct(user)
+			return V.Struct(user)
 		})
 
 		resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/422", nil))
