@@ -8,10 +8,12 @@
 模块的封装本着不重复造轮子的原则，直接提供依赖库其原本的结构和方法。
 
 目前用到的库有
-- klog
-- viper
-- godotenv
-- fiber
-- gorm
-- go-redis
+- [klog](https://github.com/kubernetes/klog)
+- [viper](https://github.com/spf13/viper)
+- [godotenv](https://github.com/joho/godotenv)
+- [fiber](https://github.com/gofiber/fiber)
+- [gorm](https://github.com/go-gorm/gorm)
+- [go-redis](https://github.com/go-redis/redis)
 
+# 注意
+**本项目还在开发中，请勿在生产环境中使用。**
