@@ -4,23 +4,29 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"testing"
 
-	"github.com/valyala/fasthttp"
-
-	"github.com/gofiber/fiber/v2/utils"
-
-	"github.com/stretchr/testify/assert"
-
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/utils"
+	"github.com/stretchr/testify/assert"
+	"github.com/valyala/fasthttp"
 )
 
-func Test_Fiberx_ErrorHandler(t *testing.T) {
-	at := assert.New(t)
+type respCase struct {
+	app        *fiber.App
+	method     string
+	target     string
+	reqBody    io.Reader
+	statusCode int
+	respBody   string
+}
 
+func Test_Fiberx_ErrorHandler(t *testing.T) {
 	app := fiber.New(fiber.Config{
 		ErrorHandler: ErrHandler,
 	})
@@ -42,13 +48,13 @@ func Test_Fiberx_ErrorHandler(t *testing.T) {
 			return V.Struct(user)
 		})
 
-		resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/422", nil))
-		at.Nil(err)
-		at.Equal(fiber.StatusUnprocessableEntity, resp.StatusCode)
-
-		body, err := ioutil.ReadAll(resp.Body)
-		at.Nil(err)
-		at.JSONEq(`{"code":422, "data":{"Field1":" must be less than 10 characters in length", "Field2":" must be greater than 1 character in length"}}`, string(body))
+		assertRespCase(t, respCase{
+			app:        app,
+			method:     fiber.MethodGet,
+			target:     "/422",
+			statusCode: fiber.StatusUnprocessableEntity,
+			respBody:   `{"code":422, "data":{"Field1":" must be less than 10 characters in length", "Field2":" must be greater than 1 character in length"}}`,
+		})
 	})
 
 	t.Run("normal error", func(t *testing.T) {
@@ -56,13 +62,13 @@ func Test_Fiberx_ErrorHandler(t *testing.T) {
 			return errors.New("hi, i'm an error")
 		})
 
-		resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/", nil))
-		at.Nil(err)
-		at.Equal(fiber.StatusInternalServerError, resp.StatusCode)
-
-		body, err := ioutil.ReadAll(resp.Body)
-		at.Nil(err)
-		at.JSONEq(`{"code":500, "message":"Internal Server Error"}`, string(body))
+		assertRespCase(t, respCase{
+			app:        app,
+			method:     fiber.MethodGet,
+			target:     "/",
+			statusCode: fiber.StatusInternalServerError,
+			respBody:   `{"code":500, "message":"Internal Server Error"}`,
+		})
 	})
 
 	t.Run("fiber error", func(t *testing.T) {
@@ -70,13 +76,13 @@ func Test_Fiberx_ErrorHandler(t *testing.T) {
 			return fiber.ErrBadRequest
 		})
 
-		resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/400", nil))
-		at.Nil(err)
-		at.Equal(fiber.StatusBadRequest, resp.StatusCode)
-
-		body, err := ioutil.ReadAll(resp.Body)
-		at.Nil(err)
-		at.JSONEq(`{"code":400, "message":"Bad Request"}`, string(body))
+		assertRespCase(t, respCase{
+			app:        app,
+			method:     fiber.MethodGet,
+			target:     "/400",
+			statusCode: fiber.StatusBadRequest,
+			respBody:   `{"code":400, "message":"Bad Request"}`,
+		})
 	})
 }
 
@@ -99,15 +105,14 @@ func Test_Fiberx_ValidateBody(t *testing.T) {
 			return c.SendString(u.Username)
 		})
 
-		res := httptest.NewRequest(fiber.MethodPost, "/", bytes.NewReader([]byte("username=kiyon")))
-		res.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationForm)
-		resp, err := app.Test(res)
-		at.Nil(err)
-		at.Equal(fiber.StatusOK, resp.StatusCode)
-
-		body, err := ioutil.ReadAll(resp.Body)
-		at.Nil(err)
-		at.Equal("kiyon", string(body))
+		assertRespCase(t, respCase{
+			app:        app,
+			method:     fiber.MethodPost,
+			target:     "/?username=kiyon",
+			reqBody:    bytes.NewReader([]byte("username=kiyon")),
+			statusCode: fiber.StatusOK,
+			respBody:   `kiyon`,
+		})
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -117,9 +122,7 @@ func Test_Fiberx_ValidateBody(t *testing.T) {
 }
 
 func Test_Fiberx_ValidateQuery(t *testing.T) {
-	at := assert.New(t)
 	t.Run("success", func(t *testing.T) {
-
 		app := fiber.New()
 
 		app.Get("/", func(c *fiber.Ctx) error {
@@ -135,16 +138,18 @@ func Test_Fiberx_ValidateQuery(t *testing.T) {
 			return c.SendString(u.Username)
 		})
 
-		resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/?username=kiyon", nil))
-		at.Nil(err)
-		at.Equal(fiber.StatusOK, resp.StatusCode)
-
-		body, err := ioutil.ReadAll(resp.Body)
-		at.Nil(err)
-		at.Equal("kiyon", string(body))
+		assertRespCase(t, respCase{
+			app:        app,
+			method:     fiber.MethodGet,
+			target:     "/?username=kiyon",
+			statusCode: fiber.StatusOK,
+			respBody:   `kiyon`,
+		})
 	})
 
 	t.Run("error", func(t *testing.T) {
+		at := assert.New(t)
+
 		fctx := &fasthttp.RequestCtx{}
 		fctx.Request.URI().SetQueryString("a=b")
 		c := fiber.New().AcquireCtx(fctx)
@@ -170,7 +175,6 @@ func Test_Fiberx_2xx(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(strconv.Itoa(tc.code), func(t *testing.T) {
-			at := assert.New(t)
 			fn := tc.fn
 			app := fiber.New()
 			app.Get("/", func(c *fiber.Ctx) error {
@@ -180,97 +184,124 @@ func Test_Fiberx_2xx(t *testing.T) {
 				return fn(c)
 			})
 
-			resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/", nil))
-			at.Nil(err)
-			at.Equal(tc.code, resp.StatusCode)
-
-			body, err := ioutil.ReadAll(resp.Body)
-			at.Nil(err)
-			expected := fmt.Sprintf("{\"code\":%d,\"message\":\"%s\"}", tc.code, utils.StatusMessage(tc.code))
-			if tc.code == fiber.StatusNoContent {
-				expected = ""
+			c := respCase{
+				app:        app,
+				method:     fiber.MethodGet,
+				target:     "/",
+				statusCode: tc.code,
+				respBody:   fmt.Sprintf("{\"code\":%d,\"message\":\"%s\"}", tc.code, utils.StatusMessage(tc.code)),
 			}
-			at.Equal(expected, string(body))
+
+			if tc.code == fiber.StatusNoContent {
+				c.respBody = ""
+			}
+
+			assertRespCase(t, c)
 		})
 	}
 }
 
 func Test_Fiberx_RequestID(t *testing.T) {
-	at := assert.New(t)
 	app := fiber.New()
 	app.Get("/", func(c *fiber.Ctx) error {
 		c.Set(fiber.HeaderXRequestID, "id")
 		return RespOK(c)
 	})
 
-	resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/", nil))
-	at.Nil(err)
-	at.Equal(fiber.StatusOK, resp.StatusCode)
-
-	body, err := ioutil.ReadAll(resp.Body)
-	at.Nil(err)
-	at.Equal(`{"code":200,"message":"OK","request_id":"id"}`, string(body))
+	assertRespCase(t, respCase{
+		app:        app,
+		method:     fiber.MethodGet,
+		target:     "/",
+		statusCode: fiber.StatusOK,
+		respBody:   `{"code":200,"message":"OK","request_id":"id"}`,
+	})
 }
 
 func Test_Fiberx_Logger(t *testing.T) {
-	at := assert.New(t)
-
-	app := fiber.New()
+	app := fiber.New(fiber.Config{ErrorHandler: ErrHandler})
 	app.Use(Logger())
+
 	app.Get("/", func(c *fiber.Ctx) error {
 		c.Set(fiber.HeaderXRequestID, "id")
 		return RespOK(c)
+	})
+
+	assertRespCase(t, respCase{
+		app:        app,
+		method:     fiber.MethodGet,
+		target:     "/",
+		statusCode: fiber.StatusOK,
+		respBody:   `{"code":200,"message":"OK","request_id":"id"}`,
 	})
 
 	app.Get("/error", func(c *fiber.Ctx) error {
 		return fiber.ErrForbidden
 	})
 
-	resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/", nil))
-	at.Nil(err)
-	at.Equal(fiber.StatusOK, resp.StatusCode)
-
-	body, err := ioutil.ReadAll(resp.Body)
-	at.Nil(err)
-	at.Equal(`{"code":200,"message":"OK","request_id":"id"}`, string(body))
-
-	resp, err = app.Test(httptest.NewRequest(fiber.MethodGet, "/error", nil))
-	at.Nil(err)
-	at.Equal(fiber.StatusForbidden, resp.StatusCode)
-
-	body, err = ioutil.ReadAll(resp.Body)
-	at.Nil(err)
-	at.Equal("Forbidden", string(body))
+	assertRespCase(t, respCase{
+		app:        app,
+		method:     fiber.MethodGet,
+		target:     "/error",
+		statusCode: fiber.StatusForbidden,
+		respBody:   `{"code":403,"message":"Forbidden"}`,
+	})
 }
 
 func Test_Fiberx_Response_Message(t *testing.T) {
-	at := assert.New(t)
 	app := fiber.New()
 	app.Get("/", func(c *fiber.Ctx) error {
 		return RespMessage(c, "message")
 	})
 
-	resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/", nil))
-	at.Nil(err)
-	at.Equal(fiber.StatusOK, resp.StatusCode)
-
-	body, err := ioutil.ReadAll(resp.Body)
-	at.Nil(err)
-	at.Equal(`{"code":200,"message":"message"}`, string(body))
+	assertRespCase(t, respCase{
+		app:        app,
+		method:     fiber.MethodGet,
+		target:     "/",
+		statusCode: fiber.StatusOK,
+		respBody:   `{"code":200,"message":"message"}`,
+	})
 }
 
 func Test_Fiberx_Response_Data(t *testing.T) {
-	at := assert.New(t)
 	app := fiber.New()
 	app.Get("/", func(c *fiber.Ctx) error {
 		return RespData(c, []string{"data1", "data2"})
 	})
 
-	resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/", nil))
-	at.Nil(err)
-	at.Equal(fiber.StatusOK, resp.StatusCode)
+	assertRespCase(t, respCase{
+		app:        app,
+		method:     fiber.MethodGet,
+		target:     "/",
+		statusCode: fiber.StatusOK,
+		respBody:   `{"code":200,"data":["data1","data2"]}`,
+	})
+}
 
-	body, err := ioutil.ReadAll(resp.Body)
+func assertRespCase(t *testing.T, c respCase) {
+	t.Helper()
+
+	at := assert.New(t)
+
+	isJson := strings.HasPrefix(c.respBody, "{") && strings.HasSuffix(c.respBody, "}")
+
+	res := httptest.NewRequest(c.method, c.target, c.reqBody)
+	if c.method == fiber.MethodPost {
+		res.Header.Set(fiber.HeaderContentType, fiber.MIMEApplicationForm)
+	}
+
+	resp, err := c.app.Test(res)
 	at.Nil(err)
-	at.Equal(`{"code":200,"data":["data1","data2"]}`, string(body))
+	at.Equal(c.statusCode, resp.StatusCode)
+	if isJson {
+		at.Equal(fiber.MIMEApplicationJSON, resp.Header.Get(fiber.HeaderContentType))
+	}
+
+	var body []byte
+	body, err = ioutil.ReadAll(resp.Body)
+	at.Nil(err)
+	if isJson {
+		at.JSONEq(c.respBody, string(body))
+	} else {
+		at.Equal(c.respBody, string(body))
+	}
 }
