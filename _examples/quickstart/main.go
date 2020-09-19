@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/kiyonlin/dawn"
+	"github.com/kiyonlin/dawn/fiberx"
 )
 
 func main() {
@@ -13,7 +14,7 @@ func main() {
 	r := server.Router()
 	// GET /  =>  Welcome to dawn 👋
 	r.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Welcome to dawn 👋")
+		return fiberx.Message(c, "Welcome to dawn 👋")
 	})
 
 	log.Println(server.Run(":3000"))

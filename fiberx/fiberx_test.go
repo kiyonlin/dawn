@@ -250,7 +250,7 @@ func Test_Fiberx_Logger(t *testing.T) {
 func Test_Fiberx_Response_Message(t *testing.T) {
 	app := fiber.New()
 	app.Get("/", func(c *fiber.Ctx) error {
-		return RespMessage(c, "message")
+		return Message(c, "message")
 	})
 
 	assertRespCase(t, respCase{
@@ -265,7 +265,7 @@ func Test_Fiberx_Response_Message(t *testing.T) {
 func Test_Fiberx_Response_Data(t *testing.T) {
 	app := fiber.New()
 	app.Get("/", func(c *fiber.Ctx) error {
-		return RespData(c, []string{"data1", "data2"})
+		return Data(c, []string{"data1", "data2"})
 	})
 
 	assertRespCase(t, respCase{

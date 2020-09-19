@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/kiyonlin/dawn"
+	"github.com/kiyonlin/dawn/fiberx"
 )
 
 func main() {
@@ -14,7 +15,7 @@ func main() {
 
 	// GET /  =>  I'm in prefork mode 🚀
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("I'm in prefork mode 🚀")
+		return fiberx.Message(c, "I'm in prefork mode 🚀")
 	})
 
 	server := dawn.New(dawn.App(app))
