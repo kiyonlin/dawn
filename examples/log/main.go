@@ -6,12 +6,10 @@ import (
 	"github.com/kiyonlin/dawn/log"
 )
 
-func init() {
+func main() {
 	log.InitFlags(nil)
 	flag.Parse()
-}
 
-func main() {
 	defer log.Flush()
 
 	log.Errorln("error")
