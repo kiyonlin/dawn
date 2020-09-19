@@ -88,6 +88,16 @@ func Resp(c *fiber.Ctx, statusCode int, res Response) error {
 	return c.Status(statusCode).JSON(res)
 }
 
+// RespData returns data with status code OK by default
+func RespData(c *fiber.Ctx, data interface{}) error {
+	return Resp(c, fiber.StatusOK, Response{Data: data})
+}
+
+// RespMessage wraps for RespOK with required message
+func RespMessage(c *fiber.Ctx, msg string) error {
+	return RespOK(c, msg)
+}
+
 // respCommon
 func respCommon(c *fiber.Ctx, code int, msg ...string) error {
 	res := Response{

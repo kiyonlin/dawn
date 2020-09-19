@@ -242,3 +242,35 @@ func Test_Fiberx_Logger(t *testing.T) {
 	at.Nil(err)
 	at.Equal("Forbidden", string(body))
 }
+
+func Test_Fiberx_Response_Message(t *testing.T) {
+	at := assert.New(t)
+	app := fiber.New()
+	app.Get("/", func(c *fiber.Ctx) error {
+		return RespMessage(c, "message")
+	})
+
+	resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/", nil))
+	at.Nil(err)
+	at.Equal(fiber.StatusOK, resp.StatusCode)
+
+	body, err := ioutil.ReadAll(resp.Body)
+	at.Nil(err)
+	at.Equal(`{"code":200,"message":"message"}`, string(body))
+}
+
+func Test_Fiberx_Response_Data(t *testing.T) {
+	at := assert.New(t)
+	app := fiber.New()
+	app.Get("/", func(c *fiber.Ctx) error {
+		return RespData(c, []string{"data1", "data2"})
+	})
+
+	resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/", nil))
+	at.Nil(err)
+	at.Equal(fiber.StatusOK, resp.StatusCode)
+
+	body, err := ioutil.ReadAll(resp.Body)
+	at.Nil(err)
+	at.Equal(`{"code":200,"data":["data1","data2"]}`, string(body))
+}
