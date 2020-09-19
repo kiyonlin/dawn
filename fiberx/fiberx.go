@@ -1,15 +1,19 @@
 package fiberx
 
 import (
+	"io"
+	"os"
 	"strings"
+	"time"
 
 	"github.com/go-playground/locales/en"
-
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	ent "github.com/go-playground/validator/v10/translations/en"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/utils"
+	"github.com/valyala/bytebufferpool"
+	"github.com/valyala/fasthttp"
 )
 
 var (
@@ -164,4 +168,81 @@ func RespMultiStatus(c *fiber.Ctx, msg ...string) error {
 // RespAlreadyReported responses with status code 208 RFC 5842, 7.1
 func RespAlreadyReported(c *fiber.Ctx, msg ...string) error {
 	return respCommon(c, fiber.StatusAlreadyReported, msg...)
+}
+
+var pid = os.Getpid()
+
+// Logger logs request and response info to os.Stdout
+// or os.Stderr. The format is:
+// time #pid[-request-id]: latency status clientIP method protocol://host_path[ error]
+func Logger() fiber.Handler {
+	return func(ctx *fiber.Ctx) (err error) {
+		start := time.Now()
+
+		err = ctx.Next()
+
+		end := time.Now()
+		latency := end.Sub(start).Truncate(time.Microsecond)
+
+		bb := bytebufferpool.Get()
+		// append time
+		bb.B = end.AppendFormat(bb.B, "2006/01/02 15:04:05.000")
+
+		// append pid
+		_, _ = bb.WriteString(" #")
+		bb.B = fasthttp.AppendUint(bb.B, pid)
+
+		// append request id
+		if requestId := ctx.Response().Header.Peek(fiber.HeaderXRequestID); len(requestId) > 0 {
+			_ = bb.WriteByte('-')
+			_, _ = bb.Write(requestId)
+		}
+		_, _ = bb.WriteString(": ")
+
+		// append latency
+		_, _ = bb.WriteString(latency.String())
+		_ = bb.WriteByte(' ')
+
+		// append status code
+		statusCode := ctx.Response().StatusCode()
+		bb.B = fasthttp.AppendUint(bb.B, statusCode)
+		_ = bb.WriteByte(' ')
+
+		// append client ip
+		_, _ = bb.WriteString(ctx.IP())
+		_ = bb.WriteByte(' ')
+
+		// append http method
+		_, _ = bb.WriteString(ctx.Method())
+		_ = bb.WriteByte(' ')
+
+		// append http protocol://host/uri
+		_, _ = bb.WriteString(ctx.Protocol())
+		_, _ = bb.WriteString("://")
+		_, _ = bb.Write(ctx.Request().URI().Host())
+		_, _ = bb.Write(ctx.Request().RequestURI())
+
+		// append error
+		if err != nil {
+			_ = bb.WriteByte(' ')
+			_, _ = bb.WriteString(err.Error())
+		}
+
+		// append newline
+		_ = bb.WriteByte('\n')
+
+		var w io.Writer
+		if statusCode < 400 {
+			w = os.Stdout
+		} else {
+			w = os.Stderr
+		}
+
+		go func() {
+			_, _ = bb.WriteTo(w)
+			bytebufferpool.Put(bb)
+		}()
+
+		return nil
+	}
 }

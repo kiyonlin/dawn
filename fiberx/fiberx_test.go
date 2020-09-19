@@ -211,3 +211,34 @@ func Test_Fiberx_RequestID(t *testing.T) {
 	at.Nil(err)
 	at.Equal(`{"code":200,"message":"OK","request_id":"id"}`, string(body))
 }
+
+func Test_Fiberx_Logger(t *testing.T) {
+	at := assert.New(t)
+
+	app := fiber.New()
+	app.Use(Logger())
+	app.Get("/", func(c *fiber.Ctx) error {
+		c.Set(fiber.HeaderXRequestID, "id")
+		return RespOK(c)
+	})
+
+	app.Get("/error", func(c *fiber.Ctx) error {
+		return fiber.ErrForbidden
+	})
+
+	resp, err := app.Test(httptest.NewRequest(fiber.MethodGet, "/", nil))
+	at.Nil(err)
+	at.Equal(fiber.StatusOK, resp.StatusCode)
+
+	body, err := ioutil.ReadAll(resp.Body)
+	at.Nil(err)
+	at.Equal(`{"code":200,"message":"OK","request_id":"id"}`, string(body))
+
+	resp, err = app.Test(httptest.NewRequest(fiber.MethodGet, "/error", nil))
+	at.Nil(err)
+	at.Equal(fiber.StatusForbidden, resp.StatusCode)
+
+	body, err = ioutil.ReadAll(resp.Body)
+	at.Nil(err)
+	at.Equal("Forbidden", string(body))
+}

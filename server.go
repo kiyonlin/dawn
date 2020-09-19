@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
-
-	"github.com/gofiber/fiber/v2"
+	"github.com/kiyonlin/dawn/config"
+	"github.com/kiyonlin/dawn/fiberx"
 )
 
 // Server denotes Dawn web server
@@ -39,13 +39,18 @@ func New(opts ...Option) *Server {
 // - Pprof
 // middleware already attached in default fiber app.
 func Default() *Server {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ErrorHandler: fiberx.ErrHandler,
+	})
 	app.Use(
 		requestid.New(),
-		logger.New(),
+		fiberx.Logger(),
 		recover.New(),
-		pprof.New(),
 	)
+
+	if config.GetBool("debug") {
+		app.Use(pprof.New())
+	}
 
 	return &Server{
 		app: app,
@@ -69,13 +74,12 @@ func (s *Server) RunTls(addr, certFile, keyFile string) error {
 	if err != nil {
 		return err
 	}
-	config := &tls.Config{
+	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{cert},
 		MinVersion:   tls.VersionTLS12,
 	}
 
-	ln, err := tls.
-		Listen("tcp", addr, config)
+	ln, err := tls.Listen("tcp", addr, tlsConfig)
 	if err != nil {
 		return err
 	}
