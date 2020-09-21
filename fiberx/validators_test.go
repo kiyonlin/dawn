@@ -7,6 +7,8 @@ import (
 )
 
 func TestMobile(t *testing.T) {
+	t.Parallel()
+
 	at := assert.New(t)
 
 	at.Nil(V.Var("13888888888", "mobile"))
@@ -18,8 +20,9 @@ func TestMobile(t *testing.T) {
 func BenchmarkName(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer()
-
-	for i := 0; i < b.N; i++ {
-		_ = V.Var("13888888888", "mobile")
-	}
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			_ = V.Var("13888888888", "mobile")
+		}
+	})
 }

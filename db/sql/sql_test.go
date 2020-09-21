@@ -15,12 +15,16 @@ import (
 )
 
 func Test_Sql_New(t *testing.T) {
+	t.Parallel()
+
 	modular := New()
 	_, ok := modular.(*sqlModule)
 	assert.True(t, ok)
 }
 
 func Test_Sql_Module_Name(t *testing.T) {
+	t.Parallel()
+
 	assert.Equal(t, "dawn:sql", m.String())
 }
 

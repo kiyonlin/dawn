@@ -36,6 +36,8 @@ type (
 )
 
 func Test_Load_Panic(t *testing.T) {
+	t.Parallel()
+
 	assert.Panics(t, func() {
 		nonConfigName := "non config name"
 		Load(configPath, nonConfigName)

@@ -27,11 +27,12 @@ type respCase struct {
 }
 
 func Test_Fiberx_ErrorHandler(t *testing.T) {
-	app := fiber.New(fiber.Config{
-		ErrorHandler: ErrHandler,
-	})
-
 	t.Run("StatusUnprocessableEntity", func(t *testing.T) {
+		t.Parallel()
+
+		app := fiber.New(fiber.Config{
+			ErrorHandler: ErrHandler,
+		})
 		app.Get("/422", func(c *fiber.Ctx) error {
 			type User struct {
 				Username string `validate:"required"`
@@ -58,6 +59,11 @@ func Test_Fiberx_ErrorHandler(t *testing.T) {
 	})
 
 	t.Run("normal error", func(t *testing.T) {
+		t.Parallel()
+
+		app := fiber.New(fiber.Config{
+			ErrorHandler: ErrHandler,
+		})
 		app.Get("/", func(c *fiber.Ctx) error {
 			return errors.New("hi, i'm an error")
 		})
@@ -72,6 +78,11 @@ func Test_Fiberx_ErrorHandler(t *testing.T) {
 	})
 
 	t.Run("fiber error", func(t *testing.T) {
+		t.Parallel()
+
+		app := fiber.New(fiber.Config{
+			ErrorHandler: ErrHandler,
+		})
 		app.Get("/400", func(c *fiber.Ctx) error {
 			return fiber.ErrBadRequest
 		})
@@ -89,6 +100,7 @@ func Test_Fiberx_ErrorHandler(t *testing.T) {
 func Test_Fiberx_ValidateBody(t *testing.T) {
 	at := assert.New(t)
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
 
 		app := fiber.New()
 
@@ -116,6 +128,8 @@ func Test_Fiberx_ValidateBody(t *testing.T) {
 	})
 
 	t.Run("error", func(t *testing.T) {
+		t.Parallel()
+
 		c := fiber.New().AcquireCtx(&fasthttp.RequestCtx{})
 		at.NotNil(ValidateBody(c, nil))
 	})
@@ -123,6 +137,8 @@ func Test_Fiberx_ValidateBody(t *testing.T) {
 
 func Test_Fiberx_ValidateQuery(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
+		t.Parallel()
+
 		app := fiber.New()
 
 		app.Get("/", func(c *fiber.Ctx) error {
@@ -148,6 +164,8 @@ func Test_Fiberx_ValidateQuery(t *testing.T) {
 	})
 
 	t.Run("error", func(t *testing.T) {
+		t.Parallel()
+
 		at := assert.New(t)
 
 		fctx := &fasthttp.RequestCtx{}
@@ -175,6 +193,8 @@ func Test_Fiberx_2xx(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(strconv.Itoa(tc.code), func(t *testing.T) {
+			t.Parallel()
+
 			fn := tc.fn
 			app := fiber.New()
 			app.Get("/", func(c *fiber.Ctx) error {
@@ -202,6 +222,8 @@ func Test_Fiberx_2xx(t *testing.T) {
 }
 
 func Test_Fiberx_RequestID(t *testing.T) {
+	t.Parallel()
+
 	app := fiber.New()
 	app.Get("/", func(c *fiber.Ctx) error {
 		c.Set(fiber.HeaderXRequestID, "id")
@@ -218,6 +240,8 @@ func Test_Fiberx_RequestID(t *testing.T) {
 }
 
 func Test_Fiberx_Logger(t *testing.T) {
+	t.Parallel()
+
 	app := fiber.New(fiber.Config{ErrorHandler: ErrHandler})
 	app.Use(Logger())
 
@@ -248,6 +272,8 @@ func Test_Fiberx_Logger(t *testing.T) {
 }
 
 func Test_Fiberx_Response_Message(t *testing.T) {
+	t.Parallel()
+
 	app := fiber.New()
 	app.Get("/", func(c *fiber.Ctx) error {
 		return Message(c, "message")
@@ -263,6 +289,8 @@ func Test_Fiberx_Response_Message(t *testing.T) {
 }
 
 func Test_Fiberx_Response_Data(t *testing.T) {
+	t.Parallel()
+
 	app := fiber.New()
 	app.Get("/", func(c *fiber.Ctx) error {
 		return Data(c, []string{"data1", "data2"})

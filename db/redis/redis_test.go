@@ -12,12 +12,16 @@ import (
 )
 
 func Test_Redis_New(t *testing.T) {
+	t.Parallel()
+
 	modular := New()
 	_, ok := modular.(*redisModule)
 	assert.True(t, ok)
 }
 
 func Test_Redis_Module_Name(t *testing.T) {
+	t.Parallel()
+
 	assert.Equal(t, "dawn:redis", m.String())
 }
 

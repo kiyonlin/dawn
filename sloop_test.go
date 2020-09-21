@@ -16,6 +16,8 @@ var (
 )
 
 func Test_Sloop_New(t *testing.T) {
+	t.Parallel()
+
 	app := fiber.New()
 
 	s := New(
@@ -29,6 +31,8 @@ func Test_Sloop_New(t *testing.T) {
 }
 
 func Test_Sloop_Default(t *testing.T) {
+	t.Parallel()
+
 	config.Set("debug", true)
 	s := Default(fiber.Config{})
 
@@ -37,6 +41,8 @@ func Test_Sloop_Default(t *testing.T) {
 }
 
 func Test_Sloop_AddModulars(t *testing.T) {
+	t.Parallel()
+
 	s := New()
 
 	s.AddModulars(m)
@@ -45,6 +51,8 @@ func Test_Sloop_AddModulars(t *testing.T) {
 }
 
 func Test_Sloop_Run(t *testing.T) {
+	t.Parallel()
+
 	s := New(Modulars(m))
 
 	go func() {
@@ -59,14 +67,20 @@ func Test_Sloop_RunTls(t *testing.T) {
 	s := New()
 
 	t.Run("invalid addr", func(t *testing.T) {
+		t.Parallel()
+
 		assert.NotNil(t, s.RunTls(":99999", "./.github/testdata/ssl.pem", "./.github/testdata/ssl.key"))
 	})
 
 	t.Run("invalid ssl info", func(t *testing.T) {
+		t.Parallel()
+
 		assert.NotNil(t, s.RunTls("", "./.github/README.md", "./.github/README.md"))
 	})
 
 	t.Run("with ssl", func(t *testing.T) {
+		t.Parallel()
+
 		go func() {
 			time.Sleep(time.Millisecond * 100)
 			assert.NoError(t, s.app.Shutdown())
@@ -77,11 +91,15 @@ func Test_Sloop_RunTls(t *testing.T) {
 }
 
 func Test_Sloop_Shutdown(t *testing.T) {
+	t.Parallel()
+
 	require.NotNil(t, (&Sloop{}).Shutdown())
 	require.Nil(t, New().Shutdown())
 }
 
 func Test_Sloop_Router(t *testing.T) {
+	t.Parallel()
+
 	require.Nil(t, (&Sloop{}).Router())
 	require.NotNil(t, New().Router())
 }
