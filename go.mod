@@ -6,6 +6,7 @@ require (
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
 	github.com/go-playground/validator/v10 v10.3.0
+	github.com/go-redis/redis/v8 v8.1.3
 	github.com/gofiber/fiber/v2 v2.0.2
 	github.com/joho/godotenv v1.3.0
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
