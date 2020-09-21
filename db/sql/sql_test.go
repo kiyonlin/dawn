@@ -1,13 +1,17 @@
 package sql
 
 import (
+	"context"
 	"sync"
 	"testing"
+	"time"
+
+	"gorm.io/gorm"
 
 	"github.com/kiyonlin/dawn"
 	"github.com/kiyonlin/dawn/config"
-
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm/logger"
 )
 
 func Test_Sql_New(t *testing.T) {
@@ -22,6 +26,8 @@ func Test_Sql_Module_Name(t *testing.T) {
 
 func Test_Sql_Init(t *testing.T) {
 	t.Run("empty config", func(t *testing.T) {
+		m.conns = map[string]*gorm.DB{}
+
 		at := assert.New(t)
 
 		var wg sync.WaitGroup
@@ -34,6 +40,8 @@ func Test_Sql_Init(t *testing.T) {
 	})
 
 	t.Run("with config", func(t *testing.T) {
+		m.conns = map[string]*gorm.DB{}
+
 		config.Set("sql.default", "sqlite")
 		config.Set("sql.connections.sqlite", map[string]string{})
 
@@ -50,6 +58,8 @@ func Test_Sql_Init(t *testing.T) {
 }
 
 func Test_Sql_Boot(t *testing.T) {
+	m.conns = map[string]*gorm.DB{}
+
 	at := assert.New(t)
 
 	m.conns[fallback] = connect(fallback, config.New())
@@ -74,7 +84,7 @@ func Test_Sql_Conn(t *testing.T) {
 }
 
 func Test_Sql_connect(t *testing.T) {
-	t.Run("unknow driver", func(t *testing.T) {
+	t.Run("unknown driver", func(t *testing.T) {
 		defer func() {
 			assert.Equal(t, "dawn:sql unknown driver test of name", recover())
 		}()
@@ -83,12 +93,37 @@ func Test_Sql_connect(t *testing.T) {
 		connect("name", c)
 	})
 
-	t.Run("error", func(t *testing.T) {
-		defer func() {
-			assert.Equal(t, "dawn:sql failed to connect name(sqlite): unable to open database file: is a directory", recover())
-		}()
+	t.Run("sqlite", func(t *testing.T) {
 		c := config.New()
-		c.Set("database", "./")
+		gdb := connect("name", c)
+
+		gdb.Logger.LogMode(logger.Info)
+		ctx := context.Background()
+		gdb.Logger.Info(ctx, "info")
+		gdb.Logger.Warn(ctx, "warn")
+		gdb.Logger.Trace(ctx, time.Now(), func() (string, int64) { return "", 0 }, nil)
+	})
+
+	t.Run("mysql", func(t *testing.T) {
+		defer func() {
+			assert.Contains(t, recover(),
+				"dawn:sql failed to connect name(mysql):")
+		}()
+
+		c := config.New()
+		c.Set("Driver", "mysql")
+		c.Set("ParseTime", false)
+		connect("name", c)
+	})
+
+	t.Run("postgres", func(t *testing.T) {
+		defer func() {
+			assert.Contains(t, recover(),
+				"dawn:sql failed to connect name(postgres):")
+		}()
+
+		c := config.New()
+		c.Set("Driver", "postgres")
 		connect("name", c)
 	})
 }

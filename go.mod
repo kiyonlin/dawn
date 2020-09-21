@@ -14,6 +14,8 @@ require (
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/valyala/fasthttp v1.16.0
 	golang.org/x/sys v0.0.0-20200918174421-af09f7315aff // indirect
+	gorm.io/driver/mysql v1.0.1
+	gorm.io/driver/postgres v1.0.1
 	gorm.io/driver/sqlite v1.1.3
 	gorm.io/gorm v1.20.1
 	k8s.io/klog/v2 v2.3.0

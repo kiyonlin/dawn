@@ -9,8 +9,12 @@ import (
 
 	"github.com/kiyonlin/dawn"
 	"github.com/kiyonlin/dawn/config"
+	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 )
 
 var (
@@ -70,6 +74,10 @@ func connect(name string, c *config.Config) (db *gorm.DB) {
 	switch strings.ToLower(driver) {
 	case "sqlite":
 		db, err = resolveSqlite(c)
+	case "mysql":
+		db, err = resolveMysql(c)
+	case "postgres":
+		db, err = resolvePostgres(c)
 	default:
 		panic(fmt.Sprintf("dawn:sql unknown driver %s of %s", driver, name))
 	}
@@ -118,3 +126,134 @@ func (disabledLogger) Info(context.Context, string, ...interface{})             
 func (disabledLogger) Warn(context.Context, string, ...interface{})                    {}
 func (disabledLogger) Error(context.Context, string, ...interface{})                   {}
 func (disabledLogger) Trace(context.Context, time.Time, func() (string, int64), error) {}
+
+// resolveSqlite resolves sqlite connection with config:
+// Driver = "sqlite"
+// Database = "file:dawn?mode=memory&cache=shared&_fk=1"
+// Prefix = "dawn_"
+// Log = false
+func resolveSqlite(c *config.Config) (*gorm.DB, error) {
+	gormConfig := &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix:   c.GetString("Prefix"),
+			SingularTable: false,
+		},
+	}
+
+	// disable logger
+	if !c.GetBool("Log") {
+		gormConfig.Logger = l
+	}
+
+	dbname := c.GetString("Database", "file:dawn?mode=memory&cache=shared&_fk=1")
+
+	return gorm.Open(sqlite.Open(dbname), gormConfig)
+}
+
+// resolveMysql resolves mysql connection with config:
+//Driver = "mysql"
+//Username = "username"
+//Password = "password"
+//Host = "127.0.0.1"
+//Port = "3306"
+//Database = "database"
+//Location = "Asia/Shanghai"
+//Charset = "utf8mb4"
+//ParseTime = true
+//Prefix = "dawn_"
+//Log = false
+//MaxIdleConns = 10
+//MaxOpenConns = 100
+//ConnMaxLifetime = "5m"
+func resolveMysql(c *config.Config) (*gorm.DB, error) {
+	parseTime := "True"
+	if !c.GetBool("ParseTime", true) {
+		parseTime = "False"
+	}
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=%s&parseTime=%s&loc=%s",
+		c.GetString("Username"),
+		c.GetString("Password"),
+		c.GetString("Host"),
+		c.GetString("Port"),
+		c.GetString("Database"),
+		c.GetString("Charset", "utf8mb4"),
+		parseTime,
+		c.GetString("Location", "Asia/Shanghai"),
+	)
+
+	gormConfig := &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix:   c.GetString("Prefix"),
+			SingularTable: false,
+		},
+	}
+
+	// disable logger
+	if !c.GetBool("Log") {
+		gormConfig.Logger = l
+	}
+
+	gdb, err := gorm.Open(mysql.Open(dsn), gormConfig)
+	if err == nil {
+		db, err := gdb.DB()
+		if err != nil {
+			return gdb, err
+		}
+		db.SetMaxIdleConns(c.GetInt("MaxIdleConns"))
+		db.SetMaxOpenConns(c.GetInt("MaxOpenConns"))
+		db.SetConnMaxLifetime(c.GetDuration("ConnMaxLifetime"))
+	}
+
+	return gdb, err
+}
+
+// resolvePostgres resolves postgres connection with config:
+//Driver = "postgres"
+//Username = "username"
+//Password = "password"
+//Host = "127.0.0.1"
+//Port = "5432"
+//Database = "database"
+//Sslmode = "disable"
+//TimeZone = "Asia/Shanghai"
+//Prefix = "dawn_"
+//Log = false
+//MaxIdleConns = 10
+//MaxOpenConns = 100
+//ConnMaxLifetime = "5m"
+func resolvePostgres(c *config.Config) (*gorm.DB, error) {
+	dsn := fmt.Sprintf("user=%s password=%s host=%s port=%s dbname=%s sslmode=%s TimeZone=%s",
+		c.GetString("Username"),
+		c.GetString("Password"),
+		c.GetString("Host"),
+		c.GetString("Port"),
+		c.GetString("Database"),
+		c.GetString("Sslmode", "disable"),
+		c.GetString("TimeZone", "Asia/Shanghai"),
+	)
+
+	gormConfig := &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix:   c.GetString("Prefix"),
+			SingularTable: false,
+		},
+	}
+
+	// disable logger
+	if !c.GetBool("Log") {
+		gormConfig.Logger = l
+	}
+
+	gdb, err := gorm.Open(postgres.Open(dsn), gormConfig)
+	if err == nil {
+		db, err := gdb.DB()
+		if err != nil {
+			return gdb, err
+		}
+		db.SetMaxIdleConns(c.GetInt("MaxIdleConns"))
+		db.SetMaxOpenConns(c.GetInt("MaxOpenConns"))
+		db.SetConnMaxLifetime(c.GetDuration("ConnMaxLifetime"))
+	}
+
+	return gdb, err
+}
