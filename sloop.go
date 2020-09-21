@@ -70,11 +70,14 @@ func (s *Sloop) AddModulars(m ...Modular) {
 
 // Run runs a web server
 func (s *Sloop) Run(addr string) error {
+	defer s.cleanup()
 	return s.setup().app.Listen(addr)
 }
 
 // Run runs a tls web server
 func (s *Sloop) RunTls(addr, certFile, keyFile string) error {
+	defer s.cleanup()
+
 	// Create tls certificate
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
@@ -143,4 +146,10 @@ func (s *Sloop) registerRoutes() *Sloop {
 		mod.RegisterRoutes(s.app)
 	}
 	return s
+}
+
+func (s *Sloop) cleanup() {
+	for _, fn := range s.cleanups {
+		fn()
+	}
 }
