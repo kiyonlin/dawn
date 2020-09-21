@@ -225,7 +225,9 @@ func Logger() fiber.Handler {
 			w = os.Stderr
 		}
 
-		_, err = bb.WriteTo(w)
+		if _, e := bb.WriteTo(w); e != nil {
+			err = e
+		}
 
 		return
 	}
