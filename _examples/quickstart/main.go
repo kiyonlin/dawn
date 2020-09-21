@@ -9,13 +9,13 @@ import (
 )
 
 func main() {
-	server := dawn.Default()
+	sloop := dawn.Default()
 
-	r := server.Router()
+	router := sloop.Router()
 	// GET /  =>  Welcome to dawn 👋
-	r.Get("/", func(c *fiber.Ctx) error {
+	router.Get("/", func(c *fiber.Ctx) error {
 		return fiberx.Message(c, "Welcome to dawn 👋")
 	})
 
-	log.Println(server.Run(":3000"))
+	log.Println(sloop.Run(":3000"))
 }

@@ -14,17 +14,17 @@ import (
 	"github.com/kiyonlin/dawn/fiberx"
 )
 
-// Server denotes Dawn web server
-type Server struct {
+// Sloop denotes Dawn web server
+type Sloop struct {
 	app      *fiber.App
 	wg       sync.WaitGroup
 	mods     []Modular
 	cleanups []Cleanup
 }
 
-// New returns a new blank Server.
-func New(opts ...Option) *Server {
-	s := &Server{
+// New returns a new blank Sloop.
+func New(opts ...Option) *Sloop {
+	s := &Sloop{
 		app: fiber.New(),
 	}
 	for _, opt := range opts {
@@ -33,13 +33,13 @@ func New(opts ...Option) *Server {
 	return s
 }
 
-// Default returns an Server instance with the
+// Default returns an Sloop instance with the
 // - RequestID
 // - Logger
 // - Recovery
 // - Pprof
 // middleware already attached in default fiber app.
-func Default(cfg ...fiber.Config) *Server {
+func Default(cfg ...fiber.Config) *Sloop {
 	c := fiber.Config{}
 	if len(cfg) > 0 {
 		c = cfg[0]
@@ -58,23 +58,23 @@ func Default(cfg ...fiber.Config) *Server {
 		app.Use(pprof.New())
 	}
 
-	return &Server{
+	return &Sloop{
 		app: app,
 	}
 }
 
 // AddModulars appends more Modulars
-func (s *Server) AddModulars(m ...Modular) {
+func (s *Sloop) AddModulars(m ...Modular) {
 	s.mods = append(s.mods, m...)
 }
 
 // Run runs a web server
-func (s *Server) Run(addr string) error {
+func (s *Sloop) Run(addr string) error {
 	return s.setup().app.Listen(addr)
 }
 
 // Run runs a tls web server
-func (s *Server) RunTls(addr, certFile, keyFile string) error {
+func (s *Sloop) RunTls(addr, certFile, keyFile string) error {
 	// Create tls certificate
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
@@ -94,7 +94,7 @@ func (s *Server) RunTls(addr, certFile, keyFile string) error {
 }
 
 // Shutdown gracefully shuts down the server without interrupting any active connections.
-func (s *Server) Shutdown() error {
+func (s *Sloop) Shutdown() error {
 	if s.app == nil {
 		return fmt.Errorf("shutdown: fiber app is not found")
 	}
@@ -102,15 +102,15 @@ func (s *Server) Shutdown() error {
 }
 
 // Router returns the server router
-func (s *Server) Router() fiber.Router {
+func (s *Sloop) Router() fiber.Router {
 	return s.app
 }
 
-func (s *Server) setup() *Server {
+func (s *Sloop) setup() *Sloop {
 	return s.init().boot().registerRoutes()
 }
 
-func (s *Server) init() *Server {
+func (s *Sloop) init() *Sloop {
 	for _, mod := range s.mods {
 		s.wg.Add(1)
 		go mod.Init(&s.wg)
@@ -119,7 +119,7 @@ func (s *Server) init() *Server {
 	return s
 }
 
-func (s *Server) boot() *Server {
+func (s *Sloop) boot() *Sloop {
 	cleanups := make(chan Cleanup, len(s.mods))
 
 	for _, mod := range s.mods {
@@ -138,7 +138,7 @@ func (s *Server) boot() *Server {
 	return s
 }
 
-func (s *Server) registerRoutes() *Server {
+func (s *Sloop) registerRoutes() *Sloop {
 	for _, mod := range s.mods {
 		mod.RegisterRoutes(s.app)
 	}

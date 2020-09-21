@@ -18,7 +18,7 @@ func main() {
 		return fiberx.Message(c, "I'm in prefork mode 🚀")
 	})
 
-	server := dawn.New(dawn.App(app))
+	sloop := dawn.New(dawn.App(app))
 
-	log.Println(server.Run(":3000"))
+	log.Println(sloop.Run(":3000"))
 }

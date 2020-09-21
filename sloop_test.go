@@ -15,7 +15,7 @@ var (
 	m = mockModule{}
 )
 
-func Test_Server_New(t *testing.T) {
+func Test_Sloop_New(t *testing.T) {
 	app := fiber.New()
 
 	s := New(
@@ -28,7 +28,7 @@ func Test_Server_New(t *testing.T) {
 	assert.Equal(t, "anonymous", s.mods[0].String())
 }
 
-func Test_Server_Default(t *testing.T) {
+func Test_Sloop_Default(t *testing.T) {
 	config.Set("debug", true)
 	s := Default(fiber.Config{})
 
@@ -36,7 +36,7 @@ func Test_Server_Default(t *testing.T) {
 	assert.Len(t, s.app.Stack()[0], 1)
 }
 
-func Test_Server_AddModulars(t *testing.T) {
+func Test_Sloop_AddModulars(t *testing.T) {
 	s := New()
 
 	s.AddModulars(m)
@@ -44,7 +44,7 @@ func Test_Server_AddModulars(t *testing.T) {
 	assert.Equal(t, "anonymous", s.mods[0].String())
 }
 
-func Test_Server_Run(t *testing.T) {
+func Test_Sloop_Run(t *testing.T) {
 	s := New(Modulars(m))
 
 	go func() {
@@ -55,7 +55,7 @@ func Test_Server_Run(t *testing.T) {
 	assert.NoError(t, s.Run(""))
 }
 
-func Test_Server_RunTls(t *testing.T) {
+func Test_Sloop_RunTls(t *testing.T) {
 	s := New()
 
 	t.Run("invalid addr", func(t *testing.T) {
@@ -76,12 +76,12 @@ func Test_Server_RunTls(t *testing.T) {
 	})
 }
 
-func Test_Server_Shutdown(t *testing.T) {
-	require.NotNil(t, (&Server{}).Shutdown())
+func Test_Sloop_Shutdown(t *testing.T) {
+	require.NotNil(t, (&Sloop{}).Shutdown())
 	require.Nil(t, New().Shutdown())
 }
 
-func Test_Server_Router(t *testing.T) {
-	require.Nil(t, (&Server{}).Router())
+func Test_Sloop_Router(t *testing.T) {
+	require.Nil(t, (&Sloop{}).Router())
 	require.NotNil(t, New().Router())
 }
