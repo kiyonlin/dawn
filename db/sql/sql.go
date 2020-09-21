@@ -39,11 +39,12 @@ func (*sqlModule) String() string {
 }
 
 // Init does connection work to each database by config:
+//  [Sql]
 //  Default = "testing"
-//  [Connections]
-//  [Connections.testing]
+//  [Sql.Connections]
+//  [Sql.Connections.testing]
 //  Driver = "sqlite"
-//  [Connections.mysql]
+//  [Sql.Connections.mysql]
 //  Driver = "mysql"
 func (m *sqlModule) Init(wg *sync.WaitGroup) {
 	defer wg.Done()
