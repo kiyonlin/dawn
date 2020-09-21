@@ -1,7 +1,6 @@
 package fiberx
 
 import (
-	"io"
 	"os"
 	"strings"
 	"time"
@@ -209,25 +208,19 @@ func Logger() fiber.Handler {
 		_, _ = bb.Write(ctx.Request().URI().Host())
 		_, _ = bb.Write(ctx.Request().RequestURI())
 
+		w := os.Stdout
 		// append error
 		if err != nil {
 			_ = bb.WriteByte(' ')
 			_, _ = bb.WriteString(err.Error())
+			w = os.Stderr
 		}
 
 		// append newline
 		_ = bb.WriteByte('\n')
 
-		var w io.Writer
-		if statusCode < 400 {
-			w = os.Stdout
-		} else {
-			w = os.Stderr
-		}
-
-		if _, e := bb.WriteTo(w); e != nil {
-			err = e
-		}
+		// ignore error on purpose
+		_, _ = bb.WriteTo(w)
 
 		return
 	}
