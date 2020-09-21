@@ -30,7 +30,7 @@ func Test_Server_New(t *testing.T) {
 
 func Test_Server_Default(t *testing.T) {
 	config.Set("debug", true)
-	s := Default()
+	s := Default(fiber.Config{})
 
 	require.NotNil(t, s.app)
 	assert.Len(t, s.app.Stack()[0], 1)

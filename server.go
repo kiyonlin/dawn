@@ -5,11 +5,12 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/kiyonlin/dawn/config"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
-	"github.com/kiyonlin/dawn/config"
 	"github.com/kiyonlin/dawn/fiberx"
 )
 
@@ -38,10 +39,15 @@ func New(opts ...Option) *Server {
 // - Recovery
 // - Pprof
 // middleware already attached in default fiber app.
-func Default() *Server {
-	app := fiber.New(fiber.Config{
-		ErrorHandler: fiberx.ErrHandler,
-	})
+func Default(cfg ...fiber.Config) *Server {
+	c := fiber.Config{}
+	if len(cfg) > 0 {
+		c = cfg[0]
+	}
+	if c.ErrorHandler == nil {
+		c.ErrorHandler = fiberx.ErrHandler
+	}
+	app := fiber.New(c)
 	app.Use(
 		requestid.New(),
 		fiberx.Logger(),
