@@ -1,5 +1,5 @@
 # Dawn
-`Dawn` is a `web` framework that provides rapid development capabilities. It provides basic services such as logging, configuration, `fiber` extension, `gorm` extension, and event system. 
+`Dawn` is an opinionated `web` framework that provides rapid development capabilities. It provides basic services such as logging, configuration, `fiber` extension, `gorm` extension, and event system. 
 
 The core idea of ​​Dawn is modularity. High-level business modules can call low-level basic modules, such as databases and so on. 
 
@@ -17,3 +17,6 @@ The libraries currently used are
 
 # Notice
 **This project is still under development, please do not use it in a production environment.**
+
+# Why dawn?
+Tribute to the first episode of one piece romance dawn. Let us set sail towards romance with the sloop.
