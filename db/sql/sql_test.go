@@ -6,11 +6,10 @@ import (
 	"testing"
 	"time"
 
-	"gorm.io/gorm"
-
 	"github.com/kiyonlin/dawn"
 	"github.com/kiyonlin/dawn/config"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 

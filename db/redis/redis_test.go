@@ -4,10 +4,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/kiyonlin/dawn/config"
-
 	"github.com/go-redis/redis/v8"
 	"github.com/kiyonlin/dawn"
+	"github.com/kiyonlin/dawn/config"
 	"github.com/stretchr/testify/assert"
 )
 
