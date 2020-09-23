@@ -4,7 +4,10 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 
 	"github.com/kiyonlin/dawn/config"
 
@@ -167,4 +170,15 @@ func (s *Sloop) Cleanup() {
 	for _, fn := range s.cleanups {
 		fn()
 	}
+}
+
+// Watch listens to signal to exit
+func (s *Sloop) Watch() {
+	c := make(chan os.Signal, 1)
+
+	signal.Notify(c,
+		syscall.SIGTERM, syscall.SIGINT,
+		syscall.SIGHUP, syscall.SIGQUIT)
+
+	<-c
 }
