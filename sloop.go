@@ -2,6 +2,7 @@ package dawn
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"sync"
 
@@ -14,7 +15,7 @@ import (
 	"github.com/kiyonlin/dawn/fiberx"
 )
 
-// Sloop denotes Dawn web server
+// Sloop denotes Dawn application
 type Sloop struct {
 	app      *fiber.App
 	wg       sync.WaitGroup
@@ -22,14 +23,14 @@ type Sloop struct {
 	cleanups []Cleanup
 }
 
-// New returns a new blank Sloop.
+// New returns a new Sloop with options.
 func New(opts ...Option) *Sloop {
-	s := &Sloop{
-		app: fiber.New(),
-	}
+	s := &Sloop{}
+
 	for _, opt := range opts {
 		opt(s)
 	}
+
 	return s
 }
 
@@ -70,13 +71,23 @@ func (s *Sloop) AddModulars(m ...Modular) {
 
 // Run runs a web server
 func (s *Sloop) Run(addr string) error {
-	defer s.cleanup()
-	return s.setup().app.Listen(addr)
+	defer s.Cleanup()
+	if s.app == nil {
+		return errors.New("dawn: app is nil")
+	}
+
+	s.Setup().registerRoutes()
+
+	return s.app.Listen(addr)
 }
 
 // Run runs a tls web server
 func (s *Sloop) RunTls(addr, certFile, keyFile string) error {
-	defer s.cleanup()
+	defer s.Cleanup()
+
+	if s.app == nil {
+		return errors.New("dawn: app is nil")
+	}
 
 	// Create tls certificate
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
@@ -93,7 +104,9 @@ func (s *Sloop) RunTls(addr, certFile, keyFile string) error {
 		return err
 	}
 
-	return s.setup().app.Listener(ln)
+	s.Setup().registerRoutes()
+
+	return s.app.Listener(ln)
 }
 
 // Shutdown gracefully shuts down the server without interrupting any active connections.
@@ -109,8 +122,9 @@ func (s *Sloop) Router() fiber.Router {
 	return s.app
 }
 
-func (s *Sloop) setup() *Sloop {
-	return s.init().boot().registerRoutes()
+// Setup initializes all modules and then boots them
+func (s *Sloop) Setup() *Sloop {
+	return s.init().boot()
 }
 
 func (s *Sloop) init() *Sloop {
@@ -148,7 +162,8 @@ func (s *Sloop) registerRoutes() *Sloop {
 	return s
 }
 
-func (s *Sloop) cleanup() {
+// Cleanup releases resources
+func (s *Sloop) Cleanup() {
 	for _, fn := range s.cleanups {
 		fn()
 	}
