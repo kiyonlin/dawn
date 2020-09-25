@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"strings"
 	"sync"
 	"time"
@@ -179,7 +180,7 @@ func resolveMysql(c *config.Config) (*gorm.DB, error) {
 		c.GetString("Database"),
 		c.GetString("Charset", "utf8mb4"),
 		parseTime,
-		c.GetString("Location", "Asia/Shanghai"),
+		url.QueryEscape(c.GetString("Location", "Asia/Shanghai")),
 	)
 
 	gormConfig := &gorm.Config{
@@ -230,7 +231,7 @@ func resolvePostgres(c *config.Config) (*gorm.DB, error) {
 		c.GetString("Port"),
 		c.GetString("Database"),
 		c.GetString("Sslmode", "disable"),
-		c.GetString("TimeZone", "Asia/Shanghai"),
+		url.QueryEscape(c.GetString("TimeZone", "Asia/Shanghai")),
 	)
 
 	gormConfig := &gorm.Config{
