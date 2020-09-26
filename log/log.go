@@ -4,7 +4,7 @@ import (
 	"flag"
 	"io"
 
-	"k8s.io/klog/v2"
+	"github.com/kiyonlin/klog"
 )
 
 // InitFlags is for explicitly initializing the flags.
@@ -26,32 +26,32 @@ func Flush() {
 // Warningln logs to the WARNING and INFO logs.
 // Arguments are handled in the manner of fmt.Println; a newline is always appended.
 func Warningln(args ...interface{}) {
-	klog.Warningln(args...)
+	klog.WarningDepth(1, args...)
 }
 
 // Warningf logs to the WARNING and INFO logs.
 // Arguments are handled in the manner of fmt.Printf; a newline is appended if missing.
 func Warningf(format string, args ...interface{}) {
-	klog.Warningf(format, args...)
+	klog.WarningDepthf(1, format, args...)
 }
 
 // Errorln logs to the ERROR, WARNING, and INFO logs.
 // Arguments are handled in the manner of fmt.Println; a newline is always appended.
 func Errorln(args ...interface{}) {
-	klog.Errorln(args...)
+	klog.ErrorDepth(1, args...)
 }
 
 // Errorf logs to the ERROR, WARNING, and INFO logs.
 // Arguments are handled in the manner of fmt.Printf; a newline is appended if missing.
 func Errorf(format string, args ...interface{}) {
-	klog.Errorf(format, args...)
+	klog.ErrorDepthf(1, format, args...)
 }
 
 // Infoln is equivalent to the global Infoln function, guarded by the value of v.
 func Infoln(level int, args ...interface{}) {
 	l := klog.Level(level)
 	if klog.V(l).Enabled() {
-		klog.V(l).Infoln(args...)
+		klog.V(l).InfoDepth(1, args...)
 	}
 }
 
@@ -59,6 +59,6 @@ func Infoln(level int, args ...interface{}) {
 func Infof(level int, format string, args ...interface{}) {
 	l := klog.Level(level)
 	if klog.V(l).Enabled() {
-		klog.V(l).Infof(format, args...)
+		klog.V(l).InfoDepthf(1, format, args...)
 	}
 }
