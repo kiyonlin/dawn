@@ -14,6 +14,7 @@ require (
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
+	github.com/urfave/cli/v2 v2.2.0
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/valyala/fasthttp v1.16.0
 	golang.org/x/sys v0.0.0-20200918174421-af09f7315aff // indirect
