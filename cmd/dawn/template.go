@@ -4,7 +4,7 @@ package main
 // cli.go uses text/template to render templates.
 const AppHelpTemplate = `       __
    ___/ /__ __    _____    dawn-cli {{if .Version}}{{if not .HideVersion}}{{.Version}}{{end}}{{end}}
- ~/ _  / _ '/ |/|/ / _ \~  For the opinionated modularized web framework dawn
+ ~/ _  / _ '/ |/|/ / _ \~  For the opinionated lightweight framework dawn
 ~~\_,_/\_,_/|__,__/_//_/~~ Visit https://github.com/kiyonlin/dawn for detail
  ~~~  ~~ ~~~~~~~~~ ~~~~~~  (c) since 2020 by kiyonlin@163.com
 
