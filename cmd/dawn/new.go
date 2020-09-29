@@ -51,7 +51,7 @@ var newProject = &cli.Command{
 }
 
 func createProject(projectPath, modName, template string) (err error) {
-	if err = os.Mkdir(projectPath, 0755); err != nil {
+	if err = os.Mkdir(projectPath, 0750); err != nil {
 		return
 	}
 
