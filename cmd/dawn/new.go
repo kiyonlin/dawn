@@ -14,17 +14,15 @@ var newProject = &cli.Command{
 	Name:      "new",
 	Aliases:   []string{"n"},
 	Usage:     "Generate a new dawn project",
-	UsageText: "new project [mod name] [options]",
+	UsageText: "new [options] project [mod name]",
 	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:    "template",
-			Aliases: []string{"t"},
-			Usage:   "project templates: default, custom, app",
-			Value:   "default",
+		&cli.BoolFlag{
+			Name:  "app",
+			Usage: "create an application project",
 		},
 	},
 	Action: func(c *cli.Context) error {
-		if c.Args().Len() == 0 {
+		if !c.Args().Present() {
 			return exit(c, "Missing project name")
 		}
 		now := time.Now()
@@ -42,7 +40,7 @@ var newProject = &cli.Command{
 		}
 
 		projectPath := dir + "/" + projectName
-		if err = createProject(projectPath, modName, c.String("template")); err != nil {
+		if err = createProject(projectPath, modName, c.Bool("app")); err != nil {
 			return exit(c, err)
 		}
 
@@ -50,7 +48,7 @@ var newProject = &cli.Command{
 	},
 }
 
-func createProject(projectPath, modName, template string) (err error) {
+func createProject(projectPath, modName string, isApp bool) (err error) {
 	if err = os.Mkdir(projectPath, 0750); err != nil {
 		return
 	}
@@ -78,7 +76,7 @@ func createProject(projectPath, modName, template string) (err error) {
 		}
 	}()
 
-	if _, err = mainFile.WriteString(newQuickstartTemplate); err != nil {
+	if _, err = mainFile.WriteString(templateContent(isApp)); err != nil {
 		return
 	}
 
@@ -128,6 +126,13 @@ func createProject(projectPath, modName, template string) (err error) {
 	return cmdTidy.Wait()
 }
 
+func templateContent(isApp bool) string {
+	if isApp {
+		return newAppTemplate
+	}
+	return newWebTemplate
+}
+
 var (
 	newSuccessTemplate = `
 Scaffolding project in %s (module %s)
@@ -140,8 +145,7 @@ Scaffolding project in %s (module %s)
 ✨  Done in %s.
 `
 
-	newQuickstartTemplate = `
-package main
+	newWebTemplate = `package main
 
 import (
 	"log"
@@ -161,6 +165,38 @@ func main() {
 	})
 
 	log.Println(sloop.Run(":3000"))
+}
+`
+
+	newAppTemplate = `package main
+
+import (
+	"flag"
+
+	"github.com/kiyonlin/dawn"
+	"github.com/kiyonlin/dawn/config"
+	"github.com/kiyonlin/dawn/db/redis"
+	"github.com/kiyonlin/dawn/db/sql"
+	"github.com/kiyonlin/dawn/log"
+)
+
+func main() {
+	config.Load("./")
+	config.LoadEnv()
+
+	log.InitFlags(nil)
+	flag.Parse()
+	defer log.Flush()
+
+	sloop := dawn.New(dawn.Modulars(
+		sql.New(),
+		redis.New(),
+		// add custom module 
+	))
+
+	defer sloop.Cleanup()
+
+	sloop.Setup().Watch()
 }
 `
 )
