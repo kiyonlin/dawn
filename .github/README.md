@@ -3,7 +3,7 @@
 
 The core idea of ​​Dawn is modularity. High-level business modules can call low-level basic modules, such as databases and so on. 
 
-Each module needs to implement its own two core methods of `Init` and `Boot`, and then register it in `Server`. General business modules need to implement its `Register Routes` method to register routes and provide `http` services.
+Each module needs to implement its own two core methods of `Init` and `Boot`, and then register it in `Sloop`. General business modules need to implement its `Register Routes` method to register routes and provide `http` services.
 
 The modules should be based on the principle of not recreating the wheel, and directly provides the original structure and method of the dependent library.
 
@@ -14,6 +14,7 @@ The libraries currently used are
 - [fiber](https://github.com/gofiber/fiber)
 - [gorm](https://github.com/go-gorm/gorm)
 - [go-redis](https://github.com/go-redis/redis)
+- [validator](https://github.com/go-playground/validator)
 
 # Notice
 **This project is still under development, please do not use it in a production environment.**
