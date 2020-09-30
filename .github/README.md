@@ -1,7 +1,7 @@
 # Dawn
 `Dawn` is an opinionated `web` framework that provides rapid development capabilities. It provides basic services such as logging, configuration, `fiber` extension, `gorm` extension, and event system. 
 
-The core idea of ​​Dawn is modularity. High-level business modules can call low-level basic modules, such as databases and so on. 
+The core idea of ​​Dawn is modularity. High-level business modules can invoke low-level modules, such as databases and so on. 
 
 Each module needs to implement its own two core methods of `Init` and `Boot`, and then register it in `Sloop`. General business modules need to implement its `Register Routes` method to register routes and provide `http` services.
 
