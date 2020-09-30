@@ -51,7 +51,6 @@ func currentVersion() (string, error) {
 	return "", errors.New("github.com/kiyonlin/dawn was not found in go.mod")
 }
 
-var latestVersionUrl = "https://api.github.com/repos/kiyonlin/dawn/releases/latest"
 var latestVersionRegexp = regexp.MustCompile(`"name":"(v.*?)"`)
 
 func latestVersion() (v string, err error) {
@@ -60,7 +59,7 @@ func latestVersion() (v string, err error) {
 		b   []byte
 	)
 
-	if res, err = http.Get(latestVersionUrl); err != nil {
+	if res, err = http.Get("https://api.github.com/repos/kiyonlin/dawn/releases/latest"); err != nil {
 		return
 	}
 
