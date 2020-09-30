@@ -14,15 +14,6 @@ func init() {
 	cli.AppHelpTemplate = AppHelpTemplate
 	cli.CommandHelpTemplate = CommandHelpTemplate
 	cli.SubcommandHelpTemplate = SubcommandHelpTemplate
-
-	cli.VersionFlag = &cli.BoolFlag{
-		Name: "version", Aliases: []string{"v"},
-		Usage: "print dawn version",
-	}
-
-	cli.VersionPrinter = func(c *cli.Context) {
-		fmt.Printf("dawn %s(latest %s)\n", currentVersion(), latestVersion())
-	}
 }
 
 func main() {
@@ -36,14 +27,6 @@ func main() {
 	if err := app.Run(os.Args); err != nil {
 		log.Fatal(err)
 	}
-}
-
-func latestVersion() string {
-	return "v0.0.1"
-}
-
-func currentVersion() string {
-	return "v0.0.1"
 }
 
 func exit(c *cli.Context, message interface{}) error {
