@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var module = &cli.Command{
+var Module = &cli.Command{
 	Name:      "module",
 	Aliases:   []string{"m"},
 	Usage:     "Generate a new dawn module",

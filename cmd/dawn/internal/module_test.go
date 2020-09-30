@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"os"
@@ -17,7 +17,7 @@ func Test_Module_Run(t *testing.T) {
 		}()
 
 		app := &cli.App{
-			Commands: []*cli.Command{module},
+			Commands: []*cli.Command{Module},
 			ExitErrHandler: func(c *cli.Context, err error) {
 				at.Contains(err.Error(), "Done")
 			}}
@@ -27,7 +27,7 @@ func Test_Module_Run(t *testing.T) {
 
 	t.Run("missing module name", func(t *testing.T) {
 		app := &cli.App{
-			Commands: []*cli.Command{module},
+			Commands: []*cli.Command{Module},
 			ExitErrHandler: func(c *cli.Context, err error) {
 				at.Contains(err.Error(), "Missing")
 			}}
@@ -37,7 +37,7 @@ func Test_Module_Run(t *testing.T) {
 
 	t.Run("invalid module name", func(t *testing.T) {
 		app := &cli.App{
-			Commands: []*cli.Command{module},
+			Commands: []*cli.Command{Module},
 			ExitErrHandler: func(c *cli.Context, err error) {
 				at.Contains(err.Error(), ".")
 			}}

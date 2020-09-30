@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/kiyonlin/dawn/cmd/dawn/internal"
 	"github.com/urfave/cli/v2"
 )
 
@@ -23,7 +24,7 @@ func run(args []string) {
 	app := &cli.App{
 		Version: version,
 		Commands: []*cli.Command{
-			newProject, module,
+			internal.NewProject, internal.Module,
 		},
 	}
 

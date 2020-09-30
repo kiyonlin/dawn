@@ -1,4 +1,4 @@
-package main
+package internal
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var newProject = &cli.Command{
+var NewProject = &cli.Command{
 	Name:      "new",
 	Aliases:   []string{"n"},
 	Usage:     "Generate a new dawn project",
