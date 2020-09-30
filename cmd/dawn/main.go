@@ -24,7 +24,7 @@ func run(args []string) {
 	app := &cli.App{
 		Version: version,
 		Commands: []*cli.Command{
-			internal.NewProject, internal.Module,
+			internal.NewProject, internal.Module, internal.Dev,
 		},
 	}
 

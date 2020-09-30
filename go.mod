@@ -3,6 +3,7 @@ module github.com/kiyonlin/dawn
 go 1.13
 
 require (
+	github.com/fsnotify/fsnotify v1.4.9
 	github.com/go-logr/logr v0.2.1 // indirect
 	github.com/go-playground/locales v0.13.0
 	github.com/go-playground/universal-translator v0.17.0
