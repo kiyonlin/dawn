@@ -8,7 +8,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const version = "v0.0.1"
+const version = "v0.0.2"
 
 func init() {
 	cli.AppHelpTemplate = AppHelpTemplate
@@ -20,7 +20,7 @@ func main() {
 	app := &cli.App{
 		Version: version,
 		Commands: []*cli.Command{
-			newProject,
+			newProject, module,
 		},
 	}
 
