@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"os"
-	"os/exec"
 	"time"
 
 	"github.com/urfave/cli/v2"
@@ -14,7 +12,7 @@ var newProject = &cli.Command{
 	Name:      "new",
 	Aliases:   []string{"n"},
 	Usage:     "Generate a new dawn project",
-	UsageText: "new [options] project [mod name]",
+	UsageText: "dawn new [options] project [mod name]",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:  "app",
@@ -34,13 +32,10 @@ var newProject = &cli.Command{
 			modName = c.Args().Get(1)
 		}
 
-		dir, err := os.Getwd()
-		if err != nil {
-			return exit(c, err)
-		}
+		dir, _ := os.Getwd()
 
 		projectPath := dir + "/" + projectName
-		if err = createProject(projectPath, modName, c.Bool("app")); err != nil {
+		if err := createProject(projectPath, modName, c.Bool("app")); err != nil {
 			return exit(c, err)
 		}
 
@@ -55,9 +50,7 @@ func createProject(projectPath, modName string, isApp bool) (err error) {
 
 	defer func() {
 		if err != nil {
-			if e := os.RemoveAll(projectPath); e != nil {
-				err = e
-			}
+			_ = os.RemoveAll(projectPath)
 		}
 	}()
 
@@ -66,64 +59,16 @@ func createProject(projectPath, modName string, isApp bool) (err error) {
 	}
 
 	// create main.go
-	var mainFile *os.File
-	if mainFile, err = os.Create(fmt.Sprintf("%s/main.go", projectPath)); err != nil {
-		return
-	}
-	defer func() {
-		if e := mainFile.Close(); e != nil {
-			err = e
-		}
-	}()
-
-	if _, err = mainFile.WriteString(templateContent(isApp)); err != nil {
+	if err = createFile(fmt.Sprintf("%s/main.go", projectPath),
+		templateContent(isApp)); err != nil {
 		return
 	}
 
-	var (
-		rc  io.ReadCloser
-		buf = make([]byte, 1024)
-		n   int
-	)
-
-	cmdInit := exec.Command("go", "mod", "init", modName)
-	if rc, err = cmdInit.StderrPipe(); err != nil {
-		return
-	}
-	if err = cmdInit.Start(); err != nil {
-		return
-	}
-	for {
-		if n, err = rc.Read(buf); err != nil {
-			if err == io.EOF {
-				break
-			}
-		}
-		_, _ = os.Stdout.Write(buf[:n])
-	}
-
-	if err = cmdInit.Wait(); err != nil {
+	if err = runCmd("go", "mod", "init", modName); err != nil {
 		return
 	}
 
-	cmdTidy := exec.Command("go", "mod", "tidy")
-
-	if rc, err = cmdTidy.StderrPipe(); err != nil {
-		return
-	}
-	if err = cmdTidy.Start(); err != nil {
-		return
-	}
-	for {
-		if n, err = rc.Read(buf); err != nil {
-			if err == io.EOF {
-				break
-			}
-		}
-		_, _ = os.Stdout.Write(buf[:n])
-	}
-
-	return cmdTidy.Wait()
+	return runCmd("go", "mod", "tidy")
 }
 
 func templateContent(isApp bool) string {

@@ -13,7 +13,7 @@ var module = &cli.Command{
 	Name:      "module",
 	Aliases:   []string{"m"},
 	Usage:     "Generate a new dawn module",
-	UsageText: "module name",
+	UsageText: "dawn module name",
 	Action: func(c *cli.Context) error {
 		if !c.Args().Present() {
 			return exit(c, "Missing module name")
@@ -22,13 +22,10 @@ var module = &cli.Command{
 
 		name := c.Args().First()
 
-		dir, err := os.Getwd()
-		if err != nil {
-			return exit(c, err)
-		}
+		dir, _ := os.Getwd()
 
 		modulePath := dir + "/" + name
-		if err = createModule(modulePath, name); err != nil {
+		if err := createModule(modulePath, name); err != nil {
 			return exit(c, err)
 		}
 
@@ -43,47 +40,19 @@ func createModule(modulePath, name string) (err error) {
 
 	defer func() {
 		if err != nil {
-			if e := os.RemoveAll(modulePath); e != nil {
-				err = e
-			}
+			_ = os.RemoveAll(modulePath)
 		}
 	}()
-
-	if err = os.Chdir(modulePath); err != nil {
-		return
-	}
 
 	// create module.go
-	var moduleFile *os.File
-	if moduleFile, err = os.Create(fmt.Sprintf("%s/%s.go", modulePath, name)); err != nil {
-		return
-	}
-	defer func() {
-		if e := moduleFile.Close(); e != nil {
-			err = e
-		}
-	}()
-
-	if _, err = moduleFile.WriteString(moduleContent(name)); err != nil {
+	if err = createFile(fmt.Sprintf("%s/%s.go", modulePath, name),
+		moduleContent(name)); err != nil {
 		return
 	}
 
 	// create module_test.go
-	var moduleTestFile *os.File
-	if moduleTestFile, err = os.Create(fmt.Sprintf("%s/%s_test.go", modulePath, name)); err != nil {
-		return
-	}
-	defer func() {
-		if e := moduleTestFile.Close(); e != nil {
-			err = e
-		}
-	}()
-
-	if _, err = moduleTestFile.WriteString(moduleTestContent(name)); err != nil {
-		return
-	}
-
-	return
+	return createFile(fmt.Sprintf("%s/%s_test.go", modulePath, name),
+		moduleTestContent(name))
 }
 
 func moduleContent(name string) string {
