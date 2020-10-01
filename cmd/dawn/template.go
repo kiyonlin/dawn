@@ -6,7 +6,7 @@ const AppHelpTemplate = `       __
    ___/ /__ __    _____    dawn-cli {{if .Version}}{{if not .HideVersion}}{{.Version}}{{end}}{{end}}
  ~/ _  / _ '/ |/|/ / _ \~  For the opinionated lightweight framework dawn
 ~~\_,_/\_,_/|__,__/_//_/~~ Visit https://github.com/kiyonlin/dawn for detail
- ~~~  ~~ ~~~~~~~~~ ~~~~~~  (c) since 2020 by kiyonlin@163.com
+ ~~~  ~~ ~~~~~~~~~ ~~~~~~  (c) since 2020 by kiyon@gofiber.io
 
 USAGE:
    dawn [global options] command [command options] [arguments...]{{if .VisibleCommands}}
