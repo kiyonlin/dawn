@@ -44,6 +44,8 @@ func Test_Dev_Escort_Init(t *testing.T) {
 }
 
 func Test_Dev_Escort_Run(t *testing.T) {
+	testingRun = true
+
 	at := assert.New(t)
 
 	setupCmd()
