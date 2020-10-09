@@ -117,7 +117,7 @@ func (e *escort) run() (err error) {
 	go e.watchingBin()
 	go e.watchingFiles()
 
-	signal.Notify(e.sig, syscall.SIGTERM, syscall.SIGINT)
+	signal.Notify(e.sig, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
 	<-e.sig
 
 	e.terminate()

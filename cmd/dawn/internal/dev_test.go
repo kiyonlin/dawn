@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"syscall"
@@ -61,7 +62,11 @@ func Test_Dev_Escort_Run(t *testing.T) {
 
 	go func() {
 		time.Sleep(time.Millisecond * 500)
-		e.sig <- syscall.SIGTERM
+		if runtime.GOOS == "windows" {
+			e.sig <- os.Interrupt
+		} else {
+			e.sig <- syscall.SIGINT
+		}
 	}()
 
 	at.Nil(e.run())
