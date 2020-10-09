@@ -101,8 +101,6 @@ func newEscort(c *cli.Context) *escort {
 	}
 }
 
-var testingRun bool
-
 func (e *escort) run() (err error) {
 	if err = e.init(); err != nil {
 		return
@@ -120,9 +118,7 @@ func (e *escort) run() (err error) {
 	go e.watchingFiles()
 
 	signal.Notify(e.sig, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
-	if !testingRun {
-		<-e.sig
-	}
+	<-e.sig
 
 	e.terminate()
 

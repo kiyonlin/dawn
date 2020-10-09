@@ -44,7 +44,9 @@ func Test_Dev_Escort_Init(t *testing.T) {
 }
 
 func Test_Dev_Escort_Run(t *testing.T) {
-	testingRun = true
+	if runtime.GOOS == "windows" {
+		t.Skip("skip for windows")
+	}
 
 	at := assert.New(t)
 
@@ -64,11 +66,7 @@ func Test_Dev_Escort_Run(t *testing.T) {
 
 	go func() {
 		time.Sleep(time.Millisecond * 500)
-		if runtime.GOOS == "windows" {
-			e.sig <- os.Interrupt
-		} else {
-			e.sig <- syscall.SIGINT
-		}
+		e.sig <- syscall.SIGINT
 	}()
 
 	at.Nil(e.run())
