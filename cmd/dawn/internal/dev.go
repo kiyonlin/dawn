@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -71,9 +72,11 @@ type escort struct {
 	excludeFiles []string
 	delay        time.Duration
 
-	w     *fsnotify.Watcher
-	bin   *exec.Cmd
-	hitCh chan struct{}
+	w          *fsnotify.Watcher
+	bin        *exec.Cmd
+	stdoutPipe io.ReadCloser
+	stderrPipe io.ReadCloser
+	hitCh      chan struct{}
 }
 
 func newEscort(c *cli.Context) *escort {
@@ -93,6 +96,8 @@ func (e *escort) run() (err error) {
 		return
 	}
 
+	log.Println("Welcome to dawn dev 👋")
+
 	defer func() {
 		_ = e.w.Close()
 		_ = os.Remove(e.binPath)
@@ -105,6 +110,8 @@ func (e *escort) run() (err error) {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
 	<-c
+
+	log.Println("See you next time 👋")
 
 	return nil
 }
@@ -148,8 +155,12 @@ func (e *escort) watchingFiles() {
 		select {
 		case event, ok := <-e.w.Events:
 			if ok {
-				log.Println("debug========", event)
 				p, op := event.Name, event.Op
+
+				// ignore chmod
+				if isChmoded(op) {
+					continue
+				}
 
 				if isRemoved(op) {
 					e.tryRemoveWatch(p)
@@ -204,11 +215,8 @@ func (e *escort) watchingBin() {
 
 func (e *escort) runBin() {
 	if e.bin != nil {
-		if err := e.bin.Process.Kill(); err != nil {
-			log.Printf("failed to kill old bin (pid %d): %s\n", e.bin.Process.Pid, err)
-		}
-		_, _ = e.bin.Process.Wait()
-		e.bin = nil
+		e.cleanOldBin()
+		log.Println("Restarting...")
 	}
 
 	// build target
@@ -218,20 +226,57 @@ func (e *escort) runBin() {
 		return
 	}
 
+	log.Println("Compile done!")
+
 	e.bin = execCommand(e.binPath)
 
-	e.watchPipe()
+	e.watchingPipes()
 
 	if err := e.bin.Start(); err != nil {
 		log.Printf("failed to start bin: %s\n", err)
+		e.bin = nil
+		return
 	}
 
-	log.Println("pid", e.bin.Process.Pid)
+	log.Println("New pid is", e.bin.Process.Pid)
 }
 
-func (e *escort) watchPipe() {
-	log.Println("starting watch pipe", e.bin.String())
-	// TODO
+func (e *escort) cleanOldBin() {
+	pid := e.bin.Process.Pid
+	log.Println("Killing old pid", pid)
+	if err := e.bin.Process.Kill(); err != nil {
+		log.Printf("Failed to kill old pid %d: %s\n", pid, err)
+	}
+
+	_, _ = e.bin.Process.Wait()
+
+	e.bin = nil
+
+	if e.stdoutPipe != nil {
+		_ = e.stdoutPipe.Close()
+	}
+	if e.stderrPipe != nil {
+		_ = e.stderrPipe.Close()
+	}
+}
+
+func (e *escort) watchingPipes() {
+	var err error
+	e.stdoutPipe, err = e.bin.StdoutPipe()
+	if err != nil {
+		log.Printf("Failed to get stdout pipe: %s", err)
+		return
+	}
+	e.stderrPipe, err = e.bin.StderrPipe()
+	if err != nil {
+		log.Printf("Failed to get stderr pipe: %s", err)
+		return
+	}
+
+	go func() {
+		_, _ = io.Copy(os.Stdout, e.stdoutPipe)
+		_, _ = io.Copy(os.Stderr, e.stderrPipe)
+	}()
 }
 
 func (e *escort) walkForWatcher(root string) {
@@ -251,8 +296,6 @@ func (e *escort) walkForWatcher(root string) {
 			return filepath.SkipDir
 		}
 
-		log.Println("check", path)
-
 		return e.w.Add(path)
 	}); err != nil {
 		log.Printf("failed to walk root %s\n", e.root)
@@ -260,7 +303,6 @@ func (e *escort) walkForWatcher(root string) {
 }
 
 func (e *escort) tryRemoveWatch(p string) {
-	log.Println("try to remove", p, "from watch")
 	if err := e.w.Remove(p); err != nil && !strings.Contains(err.Error(), "non-existent") {
 		log.Printf("failed to remove %s from watch: %s\n", p, err)
 	}
@@ -311,4 +353,8 @@ func isRemoved(op fsnotify.Op) bool {
 
 func isCreated(op fsnotify.Op) bool {
 	return op&fsnotify.Create != 0
+}
+
+func isChmoded(op fsnotify.Op) bool {
+	return op&fsnotify.Chmod != 0
 }
