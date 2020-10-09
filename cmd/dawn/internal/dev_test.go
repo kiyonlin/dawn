@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
@@ -96,21 +97,21 @@ func Test_Dev_Escort_WatchingPipes(t *testing.T) {
 func Test_Dev_Escort_WatchingBin(t *testing.T) {
 	t.Parallel()
 
-	count := 0
+	var count int32
 	e := getEscort()
-	e.delay = time.Millisecond * 10
+	e.delay = time.Millisecond * 50
 	e.hitCh = make(chan struct{})
-	e.hitFunc = func() { count++ }
+	e.hitFunc = func() { atomic.AddInt32(&count, 1) }
 
 	go e.watchingBin()
 
 	e.hitCh <- struct{}{}
 	e.hitCh <- struct{}{}
-	time.Sleep(time.Millisecond * 15)
+	time.Sleep(time.Millisecond * 75)
 	e.hitCh <- struct{}{}
-	time.Sleep(time.Millisecond * 15)
+	time.Sleep(time.Millisecond * 75)
 
-	assert.Equal(t, 2, count)
+	assert.Equal(t, int32(2), atomic.LoadInt32(&count))
 }
 
 func Test_Dev_Escort_WatchingFiles(t *testing.T) {
