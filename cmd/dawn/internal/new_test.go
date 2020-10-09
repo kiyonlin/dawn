@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bytes"
 	"os"
 	"testing"
 
@@ -57,6 +58,7 @@ func Test_New_Run(t *testing.T) {
 		defer teardownCmd()
 
 		app := &cli.App{
+			Writer:   &bytes.Buffer{},
 			Commands: []*cli.Command{NewProject},
 			ExitErrHandler: func(c *cli.Context, err error) {
 				at.Contains(err.Error(), "failed to run")
@@ -67,6 +69,7 @@ func Test_New_Run(t *testing.T) {
 
 	t.Run("missing project name", func(t *testing.T) {
 		app := &cli.App{
+			Writer:   &bytes.Buffer{},
 			Commands: []*cli.Command{NewProject},
 			ExitErrHandler: func(c *cli.Context, err error) {
 				at.Contains(err.Error(), "Missing")
@@ -77,6 +80,7 @@ func Test_New_Run(t *testing.T) {
 
 	t.Run("invalid project name", func(t *testing.T) {
 		app := &cli.App{
+			Writer:   &bytes.Buffer{},
 			Commands: []*cli.Command{NewProject},
 			ExitErrHandler: func(c *cli.Context, err error) {
 				at.Contains(err.Error(), ".")

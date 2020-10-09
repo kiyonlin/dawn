@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"bytes"
 	"os"
 	"testing"
 
@@ -27,6 +28,7 @@ func Test_Module_Run(t *testing.T) {
 
 	t.Run("missing module name", func(t *testing.T) {
 		app := &cli.App{
+			Writer:   &bytes.Buffer{},
 			Commands: []*cli.Command{Module},
 			ExitErrHandler: func(c *cli.Context, err error) {
 				at.Contains(err.Error(), "Missing")
@@ -37,6 +39,7 @@ func Test_Module_Run(t *testing.T) {
 
 	t.Run("invalid module name", func(t *testing.T) {
 		app := &cli.App{
+			Writer:   &bytes.Buffer{},
 			Commands: []*cli.Command{Module},
 			ExitErrHandler: func(c *cli.Context, err error) {
 				at.Contains(err.Error(), ".")
