@@ -133,7 +133,7 @@ func main() {
 	flag.Parse()
 	defer log.Flush()
 
-	sloop := dawn.New(dawn.Modulars(
+	sloop := dawn.New(dawn.Modulers(
 		sql.New(),
 		redis.New(),
 		// add custom module 

@@ -1,11 +1,8 @@
 package redis
 
 import (
-	"sync"
 	"testing"
 
-	"github.com/go-redis/redis/v8"
-	"github.com/kiyonlin/dawn"
 	"github.com/kiyonlin/dawn/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -13,8 +10,8 @@ import (
 func Test_Redis_New(t *testing.T) {
 	t.Parallel()
 
-	modular := New()
-	_, ok := modular.(*redisModule)
+	moduler := New()
+	_, ok := moduler.(*redisModule)
 	assert.True(t, ok)
 }
 
@@ -26,10 +23,7 @@ func Test_Redis_Module_Name(t *testing.T) {
 
 func Test_Redis_Init(t *testing.T) {
 	t.Run("empty config", func(t *testing.T) {
-		var wg sync.WaitGroup
-		wg.Add(1)
-		m.Init(&wg)
-		wg.Wait()
+		m.Init()()
 	})
 
 	t.Run("error", func(t *testing.T) {
@@ -39,27 +33,8 @@ func Test_Redis_Init(t *testing.T) {
 		config.Load("./", "redis")
 		config.Set("Redis.Connections.Default.Addr", "127.0.0.1:99999")
 
-		var wg sync.WaitGroup
-		wg.Add(1)
-		m.Init(&wg)
-		wg.Wait()
+		m.Init()()
 	})
-}
-
-func Test_Redis_Boot(t *testing.T) {
-	m.conns = map[string]*redis.Client{
-		fallback: redis.NewClient(&redis.Options{}),
-	}
-
-	var (
-		wg      sync.WaitGroup
-		cleanup = make(chan dawn.Cleanup, 1)
-	)
-	wg.Add(1)
-	m.Boot(&wg, cleanup)
-	wg.Wait()
-
-	(<-cleanup)()
 }
 
 func Test_Redis_Conn(t *testing.T) {

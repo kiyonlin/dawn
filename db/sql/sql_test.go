@@ -2,11 +2,9 @@ package sql
 
 import (
 	"context"
-	"sync"
 	"testing"
 	"time"
 
-	"github.com/kiyonlin/dawn"
 	"github.com/kiyonlin/dawn/config"
 	"github.com/stretchr/testify/assert"
 	"gorm.io/gorm"
@@ -16,8 +14,8 @@ import (
 func Test_Sql_New(t *testing.T) {
 	t.Parallel()
 
-	modular := New()
-	_, ok := modular.(*sqlModule)
+	moduler := New()
+	_, ok := moduler.(*sqlModule)
 	assert.True(t, ok)
 }
 
@@ -33,10 +31,7 @@ func Test_Sql_Init(t *testing.T) {
 
 		at := assert.New(t)
 
-		var wg sync.WaitGroup
-		wg.Add(1)
-		m.Init(&wg)
-		wg.Wait()
+		m.Init()()
 
 		at.Equal(fallback, m.fallback)
 		at.Len(m.conns, 1)
@@ -50,36 +45,11 @@ func Test_Sql_Init(t *testing.T) {
 
 		at := assert.New(t)
 
-		var wg sync.WaitGroup
-		wg.Add(1)
-		m.Init(&wg)
-		wg.Wait()
+		m.Init()()
 
 		at.Equal("sqlite", m.fallback)
 		at.Len(m.conns, 1)
 	})
-}
-
-func Test_Sql_Boot(t *testing.T) {
-	m.conns = map[string]*gorm.DB{}
-
-	at := assert.New(t)
-
-	m.conns[fallback] = connect(fallback, config.New())
-
-	var (
-		wg      sync.WaitGroup
-		cleanup = make(chan dawn.Cleanup, 1)
-	)
-	wg.Add(1)
-	m.Boot(&wg, cleanup)
-	wg.Wait()
-
-	(<-cleanup)()
-
-	db, err := m.conns[fallback].DB()
-	at.Nil(err)
-	at.NotNil(db.Ping())
 }
 
 func Test_Sql_Conn(t *testing.T) {

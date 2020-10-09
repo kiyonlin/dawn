@@ -59,8 +59,6 @@ func moduleContent(name string) string {
 	temp := `package {{module}}
 
 import (
-	"sync"
-
 	"github.com/kiyonlin/dawn"
 	"github.com/gofiber/fiber/v2"
 )
@@ -70,7 +68,7 @@ type {{module}}Module struct {
 }
 
 // New returns the module
-func New() dawn.Modular {
+func New() dawn.Moduler {
 	return &{{module}}Module{
 	}
 }
@@ -79,22 +77,18 @@ func (m *{{module}}Module) String() string {
 	return "{{module}}"
 }
 
-func (m *{{module}}Module) Init(wg *sync.WaitGroup) {
+func (m *{{module}}Module) Init() dawn.Cleanup {
 	// you can implement me or remove me
-	defer wg.Done()
-	
+
 	// Read config and init module
-}
 
-func (m *{{module}}Module) Boot(wg *sync.WaitGroup, cleanup chan<- dawn.Cleanup) {
-	// you can implement me or remove me
-	defer wg.Done()
-
-	// Do some tasks here
-
-	cleanup <- func() {
+	return func() {
 		// Put cleanup stuff here if any
 	}
+}
+
+func (m *{{module}}Module) Boot() {
+	// you can implement me or remove me
 }
 
 func (m *{{module}}Module) RegisterRoutes(router fiber.Router) {
@@ -107,10 +101,8 @@ func moduleTestContent(name string) string {
 	temp := `package {{module}}
 
 import (
-	"sync"
 	"testing"
 
-	"github.com/kiyonlin/dawn"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -121,11 +113,7 @@ func Test_Module_Name(t *testing.T) {
 func Test_Module_Init(t *testing.T) {
 	m := &{{module}}Module{}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	m.Init(&wg)
-
-	wg.Wait()
+	m.Init()()
 
 	// more assertions
 }
@@ -133,15 +121,8 @@ func Test_Module_Init(t *testing.T) {
 func Test_Module_Boot(t *testing.T) {
 	m := &{{module}}Module{}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	cleanup := make(chan dawn.Cleanup, 1)
+	m.Boot()
 
-	m.Boot(&wg, cleanup)
-
-	wg.Wait()
-
-	assert.Len(t, cleanup, 1)
 	// more assertions
 }`
 	return strings.ReplaceAll(temp, "{{module}}", name)

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 
 	"github.com/kiyonlin/dawn/config"
@@ -21,8 +20,7 @@ import (
 // Sloop denotes Dawn application
 type Sloop struct {
 	app      *fiber.App
-	wg       sync.WaitGroup
-	mods     []Modular
+	mods     []Moduler
 	cleanups []Cleanup
 }
 
@@ -67,8 +65,8 @@ func Default(cfg ...fiber.Config) *Sloop {
 	}
 }
 
-// AddModulars appends more Modulars
-func (s *Sloop) AddModulars(m ...Modular) {
+// AddModulers appends more Modulers
+func (s *Sloop) AddModulers(m ...Moduler) {
 	s.mods = append(s.mods, m...)
 }
 
@@ -132,27 +130,16 @@ func (s *Sloop) Setup() *Sloop {
 
 func (s *Sloop) init() *Sloop {
 	for _, mod := range s.mods {
-		s.wg.Add(1)
-		go mod.Init(&s.wg)
+		if cleanup := mod.Init(); cleanup != nil {
+			s.cleanups = append(s.cleanups, cleanup)
+		}
 	}
-	s.wg.Wait()
 	return s
 }
 
 func (s *Sloop) boot() *Sloop {
-	cleanups := make(chan Cleanup, len(s.mods))
-
 	for _, mod := range s.mods {
-		s.wg.Add(1)
-		go mod.Boot(&s.wg, cleanups)
-	}
-
-	s.wg.Wait()
-
-	close(cleanups)
-
-	for cleanup := range cleanups {
-		s.cleanups = append(s.cleanups, cleanup)
+		mod.Boot()
 	}
 
 	return s

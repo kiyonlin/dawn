@@ -14,8 +14,8 @@ func App(app *fiber.App) Option {
 	}
 }
 
-// Modulars option adds several Modulars to server
-func Modulars(mods ...Modular) Option {
+// Modulers option adds several Modulers to server
+func Modulers(mods ...Moduler) Option {
 	return func(s *Sloop) {
 		s.mods = append(s.mods, mods...)
 	}

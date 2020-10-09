@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/kiyonlin/dawn"
@@ -29,8 +28,8 @@ type sqlModule struct {
 	fallback string
 }
 
-// New gets the modular
-func New() dawn.Modular {
+// New gets the moduler
+func New() dawn.Moduler {
 	return m
 }
 
@@ -47,9 +46,7 @@ func (*sqlModule) String() string {
 //  Driver = "sqlite"
 //  [Sql.Connections.mysql]
 //  Driver = "mysql"
-func (m *sqlModule) Init(wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func (m *sqlModule) Init() dawn.Cleanup {
 	// extract sql config
 	c := config.Sub("sql")
 
@@ -59,13 +56,24 @@ func (m *sqlModule) Init(wg *sync.WaitGroup) {
 
 	if len(connsConfig) == 0 {
 		m.conns[m.fallback] = connect(m.fallback, config.New())
-		return
+		return m.cleanup
 	}
 
 	// connect each db in config
 	for name := range connsConfig {
 		cfg := c.Sub("connections." + name)
 		m.conns[name] = connect(name, cfg)
+	}
+
+	return m.cleanup
+}
+
+// cleanup 	close every connections
+func (m *sqlModule) cleanup() {
+	for _, gdb := range m.conns {
+		if db, err := gdb.DB(); err == nil {
+			_ = db.Close()
+		}
 	}
 }
 
@@ -89,21 +97,6 @@ func connect(name string, c *config.Config) (db *gorm.DB) {
 	}
 
 	return
-}
-
-// Boot does general ping to each connections and
-// sets cleanup to close each connections
-func (m *sqlModule) Boot(wg *sync.WaitGroup, cleanup chan<- dawn.Cleanup) {
-	defer wg.Done()
-
-	cleanup <- func() {
-		// close every connections
-		for _, gdb := range m.conns {
-			if db, err := gdb.DB(); err == nil {
-				_ = db.Close()
-			}
-		}
-	}
 }
 
 // Conn gets sql connection by specific name or fallback

@@ -3,7 +3,6 @@ package redis
 import (
 	"context"
 	"fmt"
-	"sync"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/kiyonlin/dawn"
@@ -21,8 +20,8 @@ type redisModule struct {
 	fallback string
 }
 
-// New gets the modular
-func New() dawn.Modular {
+// New gets the moduler
+func New() dawn.Moduler {
 	return m
 }
 
@@ -51,9 +50,7 @@ func (*redisModule) String() string {
 //  PoolTimeout = "1m"
 //  IdleTimeout = "1m"
 //  IdleCheckFrequency = "1m"
-func (m *redisModule) Init(wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func (m *redisModule) Init() dawn.Cleanup {
 	// extract redis config
 	c := config.Sub("redis")
 
@@ -65,6 +62,13 @@ func (m *redisModule) Init(wg *sync.WaitGroup) {
 	for name := range connsConfig {
 		cfg := c.Sub("connections." + name)
 		m.conns[name] = connect(name, cfg)
+	}
+
+	return func() {
+		// close every connections
+		for _, client := range m.conns {
+			_ = client.Close()
+		}
 	}
 }
 
@@ -92,19 +96,6 @@ func connect(name string, c *config.Config) (client *redis.Client) {
 		panic(fmt.Sprintf("dawn:redis failed to ping %s(%s): %v", name, addr, err))
 	}
 	return
-}
-
-// Boot does general ping to each connections and
-// sets cleanup to close each connections
-func (m *redisModule) Boot(wg *sync.WaitGroup, cleanup chan<- dawn.Cleanup) {
-	defer wg.Done()
-
-	cleanup <- func() {
-		// close every connections
-		for _, client := range m.conns {
-			_ = client.Close()
-		}
-	}
 }
 
 // Conn gets redis connection by specific name or fallback

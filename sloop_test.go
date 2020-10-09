@@ -22,7 +22,7 @@ func Test_Sloop_New(t *testing.T) {
 
 	s := New(
 		App(app),
-		Modulars(m),
+		Modulers(m),
 	)
 
 	assert.Equal(t, app, s.app)
@@ -40,12 +40,12 @@ func Test_Sloop_Default(t *testing.T) {
 	assert.Len(t, s.app.Stack()[0], 1)
 }
 
-func Test_Sloop_AddModulars(t *testing.T) {
+func Test_Sloop_AddModulers(t *testing.T) {
 	t.Parallel()
 
 	s := New(App(fiber.New()))
 
-	s.AddModulars(m)
+	s.AddModulers(m)
 	assert.Len(t, s.mods, 1)
 	assert.Equal(t, "anonymous", s.mods[0].String())
 }
@@ -55,7 +55,7 @@ func Test_Sloop_Run(t *testing.T) {
 
 	assert.NotNil(t, New().Run(""))
 
-	s := New(App(fiber.New()), Modulars(m))
+	s := New(App(fiber.New()), Modulers(m))
 
 	go func() {
 		time.Sleep(time.Millisecond * 100)
