@@ -8,7 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"sync/atomic"
 	"syscall"
@@ -44,10 +43,6 @@ func Test_Dev_Escort_Init(t *testing.T) {
 }
 
 func Test_Dev_Escort_Run(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("skip for windows")
-	}
-
 	at := assert.New(t)
 
 	setupCmd()

@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
+	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -266,11 +268,18 @@ func (e *escort) cleanOldBin() {
 
 	pid := e.bin.Process.Pid
 	log.Println("Killing old pid", pid)
-	if err := e.bin.Process.Kill(); err != nil {
-		log.Printf("Failed to kill old pid %d: %s\n", pid, err)
+
+	var err error
+	if runtime.GOOS == "windows" {
+		err = execCommand("TASKKILL", "/T", "/F", "/PID", strconv.Itoa(pid)).Run()
+	} else {
+		err = e.bin.Process.Kill()
+		_, _ = e.bin.Process.Wait()
 	}
 
-	_, _ = e.bin.Process.Wait()
+	if err != nil {
+		log.Printf("Failed to kill old pid %d: %s\n", pid, err)
+	}
 
 	e.bin = nil
 }
