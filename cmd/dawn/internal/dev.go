@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"context"
 	"io"
 	"io/ioutil"
 	"log"
@@ -72,11 +73,19 @@ type escort struct {
 	excludeFiles []string
 	delay        time.Duration
 
-	w          *fsnotify.Watcher
+	ctx       context.Context
+	terminate context.CancelFunc
+
+	w             *fsnotify.Watcher
+	watcherEvents chan fsnotify.Event
+	watcherErrors chan error
+	sig           chan os.Signal
+
 	bin        *exec.Cmd
 	stdoutPipe io.ReadCloser
 	stderrPipe io.ReadCloser
 	hitCh      chan struct{}
+	hitFunc    func()
 }
 
 func newEscort(c *cli.Context) *escort {
@@ -88,6 +97,7 @@ func newEscort(c *cli.Context) *escort {
 		excludeFiles: c.StringSlice("exclude_files"),
 		delay:        c.Duration("delay"),
 		hitCh:        make(chan struct{}, 1),
+		sig:          make(chan os.Signal, 1),
 	}
 }
 
@@ -107,9 +117,10 @@ func (e *escort) run() (err error) {
 	go e.watchingBin()
 	go e.watchingFiles()
 
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGTERM, syscall.SIGINT)
-	<-c
+	signal.Notify(e.sig, syscall.SIGTERM, syscall.SIGINT)
+	<-e.sig
+
+	e.terminate()
 
 	log.Println("See you next time 👋")
 
@@ -120,6 +131,11 @@ func (e *escort) init() (err error) {
 	if e.w, err = fsnotify.NewWatcher(); err != nil {
 		return
 	}
+
+	e.watcherEvents = e.w.Events
+	e.watcherErrors = e.w.Errors
+
+	e.ctx, e.terminate = context.WithCancel(context.Background())
 
 	// normalize root
 	if e.root, err = filepath.Abs(e.root); err != nil {
@@ -139,6 +155,8 @@ func (e *escort) init() (err error) {
 
 	e.binPath = f.Name()
 
+	e.hitFunc = e.runBin
+
 	return
 }
 
@@ -153,63 +171,58 @@ func (e *escort) watchingFiles() {
 
 	for {
 		select {
-		case event, ok := <-e.w.Events:
-			if ok {
-				p, op := event.Name, event.Op
+		case <-e.ctx.Done():
+			return
+		case event := <-e.watcherEvents:
+			p, op := event.Name, event.Op
 
-				// ignore chmod
-				if isChmoded(op) {
-					continue
-				}
-
-				if isRemoved(op) {
-					e.tryRemoveWatch(p)
-					continue
-				}
-
-				if info, err = os.Stat(p); err != nil {
-					log.Printf("failed to get info of %s: %s\n", p, err)
-					continue
-				}
-
-				base := filepath.Base(p)
-
-				if info.IsDir() && isCreated(op) {
-					log.Println("add", p, "to watch")
-					e.walkForWatcher(p)
-					continue
-				}
-
-				if e.ignoredFiles(base) {
-					continue
-				}
-
-				if e.hitExtension(filepath.Ext(base)) {
-					e.hitCh <- struct{}{}
-				}
+			// ignore chmod
+			if isChmoded(op) {
+				continue
 			}
-		case err, ok := <-e.w.Errors:
-			if ok {
-				log.Printf("watcher error: %s\n", err)
+
+			if isRemoved(op) {
+				e.tryRemoveWatch(p)
+				continue
 			}
+
+			if info, err = os.Stat(p); err != nil {
+				log.Printf("Failed to get info of %s: %s\n", p, err)
+				continue
+			}
+
+			base := filepath.Base(p)
+
+			if info.IsDir() && isCreated(op) {
+				log.Println("Add", p, "to watch")
+				e.walkForWatcher(p)
+				continue
+			}
+
+			if e.ignoredFiles(base) {
+				continue
+			}
+
+			if e.hitExtension(filepath.Ext(base)) {
+				e.hitCh <- struct{}{}
+			}
+		case err := <-e.watcherErrors:
+			log.Printf("Watcher error: %v\n", err)
 		}
 	}
 }
 
 func (e *escort) watchingBin() {
 	var timer *time.Timer
-	for {
-		select {
-		case <-e.hitCh:
-			// reset timer
-			if timer != nil && !timer.Stop() {
-				select {
-				case <-timer.C:
-				default:
-				}
+	for range e.hitCh {
+		// reset timer
+		if timer != nil && !timer.Stop() {
+			select {
+			case <-timer.C:
+			default:
 			}
-			timer = time.AfterFunc(e.delay, e.runBin)
 		}
+		timer = time.AfterFunc(e.delay, e.hitFunc)
 	}
 }
 
@@ -222,7 +235,7 @@ func (e *escort) runBin() {
 	// build target
 	compile := execCommand("go", "build", "-o", e.binPath, e.target)
 	if out, err := compile.CombinedOutput(); err != nil {
-		log.Printf("failed to compile %s: %s\n", e.target, out)
+		log.Printf("Failed to compile %s: %s\n", e.target, out)
 		return
 	}
 
@@ -233,7 +246,7 @@ func (e *escort) runBin() {
 	e.watchingPipes()
 
 	if err := e.bin.Start(); err != nil {
-		log.Printf("failed to start bin: %s\n", err)
+		log.Printf("Failed to start bin: %s\n", err)
 		e.bin = nil
 		return
 	}
@@ -242,6 +255,15 @@ func (e *escort) runBin() {
 }
 
 func (e *escort) cleanOldBin() {
+	defer func() {
+		if e.stdoutPipe != nil {
+			_ = e.stdoutPipe.Close()
+		}
+		if e.stderrPipe != nil {
+			_ = e.stderrPipe.Close()
+		}
+	}()
+
 	pid := e.bin.Process.Pid
 	log.Println("Killing old pid", pid)
 	if err := e.bin.Process.Kill(); err != nil {
@@ -251,32 +273,21 @@ func (e *escort) cleanOldBin() {
 	_, _ = e.bin.Process.Wait()
 
 	e.bin = nil
-
-	if e.stdoutPipe != nil {
-		_ = e.stdoutPipe.Close()
-	}
-	if e.stderrPipe != nil {
-		_ = e.stderrPipe.Close()
-	}
 }
 
 func (e *escort) watchingPipes() {
 	var err error
-	e.stdoutPipe, err = e.bin.StdoutPipe()
-	if err != nil {
+	if e.stdoutPipe, err = e.bin.StdoutPipe(); err != nil {
 		log.Printf("Failed to get stdout pipe: %s", err)
-		return
-	}
-	e.stderrPipe, err = e.bin.StderrPipe()
-	if err != nil {
-		log.Printf("Failed to get stderr pipe: %s", err)
-		return
+	} else {
+		go func() { _, _ = io.Copy(os.Stdout, e.stdoutPipe) }()
 	}
 
-	go func() {
-		_, _ = io.Copy(os.Stdout, e.stdoutPipe)
-		_, _ = io.Copy(os.Stderr, e.stderrPipe)
-	}()
+	if e.stderrPipe, err = e.bin.StderrPipe(); err != nil {
+		log.Printf("Failed to get stderr pipe: %s", err)
+	} else {
+		go func() { _, _ = io.Copy(os.Stderr, e.stderrPipe) }()
+	}
 }
 
 func (e *escort) walkForWatcher(root string) {
@@ -287,24 +298,19 @@ func (e *escort) walkForWatcher(root string) {
 
 		base := filepath.Base(path)
 
-		// exclude hidden directories like .git, .idea, etc.
-		if isHiddenDirectory(base) {
-			return filepath.SkipDir
-		}
-
 		if e.ignoredDirs(base) {
 			return filepath.SkipDir
 		}
 
 		return e.w.Add(path)
 	}); err != nil {
-		log.Printf("failed to walk root %s\n", e.root)
+		log.Printf("Failed to walk root %s: %s\n", e.root, err)
 	}
 }
 
 func (e *escort) tryRemoveWatch(p string) {
 	if err := e.w.Remove(p); err != nil && !strings.Contains(err.Error(), "non-existent") {
-		log.Printf("failed to remove %s from watch: %s\n", p, err)
+		log.Printf("Failed to remove %s from watch: %s\n", p, err)
 	}
 }
 
@@ -324,6 +330,11 @@ func (e *escort) hitExtension(ext string) bool {
 }
 
 func (e *escort) ignoredDirs(dir string) bool {
+	// exclude hidden directories like .git, .idea, etc.
+	if len(dir) > 1 && dir[0] == '.' {
+		return true
+	}
+
 	for _, d := range e.excludeDirs {
 		if dir == d {
 			return true
@@ -341,10 +352,6 @@ func (e *escort) ignoredFiles(filename string) bool {
 	}
 
 	return false
-}
-
-func isHiddenDirectory(d string) bool {
-	return len(d) > 1 && d[0] == '.'
 }
 
 func isRemoved(op fsnotify.Op) bool {
