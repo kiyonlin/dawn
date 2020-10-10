@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	config.Load("./examples/config")
+	config.Load("./_examples/config")
 	config.LoadEnv("dawn")
 
 	// output: bar

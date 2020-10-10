@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	config.Load("./")
+	config.Load("./_examples/application")
 	config.LoadEnv()
 
 	log.InitFlags(nil)
