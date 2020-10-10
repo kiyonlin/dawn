@@ -2,6 +2,8 @@ package internal
 
 import (
 	"bytes"
+	"fmt"
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -47,4 +49,18 @@ func Test_Module_Run(t *testing.T) {
 
 		at.NotNil(app.Run([]string{"bin", "module", "."}))
 	})
+}
+
+func Test_Module_CreateModule(t *testing.T) {
+	t.Parallel()
+
+	at := assert.New(t)
+
+	dir, err := ioutil.TempDir("", "test_create_module")
+	at.Nil(err)
+	defer func() { _ = os.RemoveAll(dir) }()
+
+	modulePath := fmt.Sprintf("%s%cmodule", dir, os.PathSeparator)
+
+	at.NotNil(createModule(modulePath, "invalid-name/"))
 }

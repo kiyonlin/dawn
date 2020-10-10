@@ -25,12 +25,13 @@ var Module = &cli.Command{
 
 		dir, _ := os.Getwd()
 
-		modulePath := dir + "/" + name
+		modulePath := fmt.Sprintf("%s%c%s", dir, os.PathSeparator, name)
 		if err := createModule(modulePath, name); err != nil {
 			return exit(c, err)
 		}
 
-		return success(fmt.Sprintf(moduleCreatedTemplate, modulePath, name, time.Since(now)))
+		return success(fmt.Sprintf(moduleCreatedTemplate,
+			modulePath, name, formatLatency(time.Since(now))))
 	},
 }
 
@@ -46,13 +47,13 @@ func createModule(modulePath, name string) (err error) {
 	}()
 
 	// create module.go
-	if err = createFile(fmt.Sprintf("%s/%s.go", modulePath, name),
+	if err = createFile(fmt.Sprintf("%s%c%s.go", modulePath, os.PathSeparator, name),
 		moduleContent(name)); err != nil {
 		return
 	}
 
 	// create module_test.go
-	return createFile(fmt.Sprintf("%s/%s_test.go", modulePath, name),
+	return createFile(fmt.Sprintf("%s%c%s_test.go", modulePath, os.PathSeparator, name),
 		moduleTestContent(name))
 }
 

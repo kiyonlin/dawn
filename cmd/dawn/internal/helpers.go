@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/urfave/cli/v2"
 )
@@ -42,28 +43,27 @@ func runCmd(name string, arg ...string) (err error) {
 	cmd := execCommand(name, arg...)
 
 	var (
-		rc  io.ReadCloser
-		buf = make([]byte, 1024)
-		n   int
+		stderr io.ReadCloser
+		stdout io.ReadCloser
 	)
 
-	if rc, err = cmd.StderrPipe(); err != nil {
+	if stderr, err = cmd.StderrPipe(); err != nil {
 		return
 	}
+	defer func() {
+		_ = stderr.Close()
+	}()
+	go func() { _, _ = io.Copy(os.Stderr, stderr) }()
 
-	if err = cmd.Start(); err != nil {
+	if stdout, err = cmd.StdoutPipe(); err != nil {
 		return
 	}
-	for {
-		if n, err = rc.Read(buf); err != nil {
-			if err == io.EOF {
-				break
-			}
-		}
-		_, _ = os.Stdout.Write(buf[:n])
-	}
+	defer func() {
+		_ = stdout.Close()
+	}()
+	go func() { _, _ = io.Copy(os.Stdout, stdout) }()
 
-	if err = cmd.Wait(); err != nil {
+	if err = cmd.Run(); err != nil {
 		err = fmt.Errorf("failed to run %s", cmd.String())
 	}
 

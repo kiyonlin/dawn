@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/kiyonlin/dawn/cmd/dawn/internal"
@@ -17,15 +18,17 @@ func init() {
 }
 
 func main() {
-	run(os.Args)
+	run(os.Args, os.Stdout, os.Stderr)
 }
 
-func run(args []string) {
+func run(args []string, w io.Writer, ew io.Writer) {
 	app := &cli.App{
 		Version: version,
 		Commands: []*cli.Command{
 			internal.NewProject, internal.Module, internal.Dev,
 		},
+		Writer:    w,
+		ErrWriter: ew,
 	}
 
 	if err := app.Run(args); err != nil {
