@@ -135,7 +135,7 @@ func Test_Dev_Escort_WatchingFiles(t *testing.T) {
 	e.root, err = ioutil.TempDir("", "test_watch")
 	at.Nil(err)
 	defer func() {
-		at.Nil(os.RemoveAll(e.root))
+		_ = os.RemoveAll(e.root)
 	}()
 
 	_, err = ioutil.TempDir(e.root, ".git")
