@@ -69,8 +69,10 @@ func Default(cfg ...fiber.Config) *Sloop {
 }
 
 // AddModulers appends more Modulers
-func (s *Sloop) AddModulers(m ...Moduler) {
+func (s *Sloop) AddModulers(m ...Moduler) *Sloop {
 	s.mods = append(s.mods, m...)
+
+	return s
 }
 
 // Run runs a web server
