@@ -197,7 +197,6 @@ func (e *escort) watchingFiles() {
 			base := filepath.Base(p)
 
 			if info.IsDir() && isCreated(op) {
-				log.Println("Add", p, "to watch")
 				e.walkForWatcher(p)
 				continue
 			}
@@ -237,6 +236,8 @@ func (e *escort) runBin() {
 		log.Println("Compiling...")
 	}
 
+	start := time.Now()
+
 	// build target
 	compile := execCommand("go", "build", "-o", e.binPath, e.target)
 	if out, err := compile.CombinedOutput(); err != nil {
@@ -244,7 +245,7 @@ func (e *escort) runBin() {
 		return
 	}
 
-	log.Println("Compile done!")
+	log.Printf("Compile done in %s!\n", formatLatency(time.Since(start)))
 
 	e.bin = execCommand(e.binPath)
 
@@ -314,6 +315,7 @@ func (e *escort) walkForWatcher(root string) {
 			return filepath.SkipDir
 		}
 
+		log.Println("Add", path, "to watch")
 		return e.w.Add(path)
 	}); err != nil {
 		log.Printf("Failed to walk root %s: %s\n", e.root, err)
