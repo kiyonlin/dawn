@@ -232,7 +232,9 @@ func (e *escort) watchingBin() {
 func (e *escort) runBin() {
 	if e.bin != nil {
 		e.cleanOldBin()
-		log.Println("Restarting...")
+		log.Println("Recompiling...")
+	} else {
+		log.Println("Compiling...")
 	}
 
 	// build target
