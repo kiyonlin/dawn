@@ -1,4 +1,24 @@
 # Dawn
+<p align="center">
+  <a href="https://pkg.go.dev/github.com/kiyonlin/dawn?tab=doc">
+    <img src="https://img.shields.io/badge/%F0%9F%93%9A%20godoc-pkg-00ACD7.svg?color=00ACD7&style=flat">
+  </a>
+  <a href="https://goreportcard.com/report/github.com/kiyonlin/dawn">
+    <img src="https://img.shields.io/badge/%F0%9F%93%9D%20goreport-A%2B-75C46B">
+  </a>
+  <a href="https://gocover.io/github.com/kiyonlin/dawn">
+    <img src="https://img.shields.io/badge/%F0%9F%94%8E%20gocover-97.8%25-75C46B.svg?style=flat">
+  </a>
+  <a href="https://github.com/kiyonlin/dawn/actions?query=workflow%3ASecurity">
+    <img src="https://img.shields.io/github/workflow/status/gofiber/fiber/Security?label=%F0%9F%94%91%20gosec&style=flat&color=75C46B">
+  </a>
+  <a href="https://github.com/kiyonlin/dawn/actions?query=workflow%3ATest">
+    <img src="https://img.shields.io/github/workflow/status/gofiber/fiber/Test?label=%F0%9F%A7%AA%20tests&style=flat&color=75C46B">
+  </a>
+  <a>
+    <img src="https://counter.gofiber.io/badge/kiyonlin/dawn">
+  </a>
+</p>
 `Dawn`是一个有个性的，轻量的，提供了快速开发能力的`web`框架。它提供了日志、配置、`fiber`扩展、`gorm`扩展、事件系统等基础服务。
 
 `Dawn`的核心理念是模块化。高层的业务模块可以调用低层的基础模块，例如数据库等等。
