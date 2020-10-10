@@ -17,6 +17,9 @@ import (
 	"github.com/kiyonlin/dawn/fiberx"
 )
 
+// Version of current dawn package
+const Version = "0.3.2"
+
 // Sloop denotes Dawn application
 type Sloop struct {
 	app      *fiber.App
