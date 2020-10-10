@@ -28,6 +28,7 @@ func init() {
 	global = New()
 }
 
+// New returns a new Config instance
 func New() *Config {
 	return &Config{v: viper.New()}
 }
@@ -53,7 +54,7 @@ func Load(configPath string, configName ...string) {
 	global = &Config{v: v}
 }
 
-// Load all config contents in the dir path
+// LoadAll loads all config contents in the dir path
 func LoadAll(configPath string) error {
 	return filepath.Walk(configPath, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() {
@@ -103,6 +104,7 @@ func getKeys(path string) (keys []string) {
 	return
 }
 
+// Get is shorthand for GetValue.
 func Get(key string, defaultValue ...interface{}) interface{} {
 	return global.Get(key, defaultValue...)
 }
@@ -113,6 +115,7 @@ func (c *Config) Get(key string, defaultValue ...interface{}) interface{} {
 	return c.GetValue(key, defaultValue...)
 }
 
+// GetValue gets value of the key or fallback to the default value.
 func GetValue(key string, defaultValue ...interface{}) interface{} {
 	return global.GetValue(key, defaultValue...)
 }
@@ -127,6 +130,7 @@ func (c *Config) GetValue(key string, defaultValue ...interface{}) interface{} {
 	return c.v.Get(key)
 }
 
+// GetBool gets bool value of the key or fallback to the default value.
 func GetBool(key string, defaultValue ...bool) bool {
 	return global.GetBool(key, defaultValue...)
 }
@@ -141,6 +145,7 @@ func (c *Config) GetBool(key string, defaultValue ...bool) bool {
 	return c.v.GetBool(key)
 }
 
+// GetFloat64 gets float64 value of the key or fallback to the default value.
 func GetFloat64(key string, defaultValue ...float64) float64 {
 	return global.GetFloat64(key, defaultValue...)
 }
@@ -155,6 +160,7 @@ func (c *Config) GetFloat64(key string, defaultValue ...float64) float64 {
 	return c.v.GetFloat64(key)
 }
 
+// GetInt gets int value of the key or fallback to the default value.
 func GetInt(key string, defaultValue ...int) int {
 	return global.GetInt(key, defaultValue...)
 }
@@ -169,6 +175,7 @@ func (c *Config) GetInt(key string, defaultValue ...int) int {
 	return c.v.GetInt(key)
 }
 
+// GetInt64 gets int64 value of the key or fallback to the default value.
 func GetInt64(key string, defaultValue ...int64) int64 {
 	return global.GetInt64(key, defaultValue...)
 }
@@ -183,6 +190,7 @@ func (c *Config) GetInt64(key string, defaultValue ...int64) int64 {
 	return c.v.GetInt64(key)
 }
 
+// GetString gets string value of the key or fallback to the default value.
 func GetString(key string, defaultValue ...string) string {
 	return global.GetString(key, defaultValue...)
 }
@@ -197,6 +205,7 @@ func (c *Config) GetString(key string, defaultValue ...string) string {
 	return c.v.GetString(key)
 }
 
+// GetStringMap gets map[string]interface{} value of the key or fallback to the default value.
 func GetStringMap(key string, defaultValue ...map[string]interface{}) map[string]interface{} {
 	return global.GetStringMap(key, defaultValue...)
 }
@@ -211,6 +220,7 @@ func (c *Config) GetStringMap(key string, defaultValue ...map[string]interface{}
 	return c.v.GetStringMap(key)
 }
 
+// GetStringMapString gets map[string]string value of the key or fallback to the default value.
 func GetStringMapString(key string, defaultValue ...map[string]string) map[string]string {
 	return global.GetStringMapString(key, defaultValue...)
 }
@@ -225,6 +235,7 @@ func (c *Config) GetStringMapString(key string, defaultValue ...map[string]strin
 	return c.v.GetStringMapString(key)
 }
 
+// GetStringSlice gets string slice value of the key or fallback to the default value.
 func GetStringSlice(key string, defaultValue ...[]string) []string {
 	return global.GetStringSlice(key, defaultValue...)
 }
@@ -239,6 +250,7 @@ func (c *Config) GetStringSlice(key string, defaultValue ...[]string) []string {
 	return c.v.GetStringSlice(key)
 }
 
+// GetTime gets time value of the key or fallback to the default value.
 func GetTime(key string, defaultValue ...time.Time) time.Time {
 	return global.GetTime(key, defaultValue...)
 }
@@ -253,6 +265,7 @@ func (c *Config) GetTime(key string, defaultValue ...time.Time) time.Time {
 	return c.v.GetTime(key)
 }
 
+// GetDuration gets duration value of the key or fallback to the default value.
 func GetDuration(key string, defaultValue ...time.Duration) time.Duration {
 	return global.GetDuration(key, defaultValue...)
 }
@@ -267,6 +280,7 @@ func (c *Config) GetDuration(key string, defaultValue ...time.Duration) time.Dur
 	return c.v.GetDuration(key)
 }
 
+// AllSettings gets all settings in config.
 func AllSettings() map[string]interface{} {
 	return global.AllSettings()
 }
@@ -277,6 +291,8 @@ func (c *Config) AllSettings() map[string]interface{} {
 	return c.v.AllSettings()
 }
 
+// Unmarshal unmarshals the config into a Struct. Make sure that the tags
+// on the fields of the structure are properly set.
 func Unmarshal(rawVal interface{}) error {
 	return global.Unmarshal(rawVal)
 }
@@ -287,6 +303,7 @@ func (c *Config) Unmarshal(rawVal interface{}) error {
 	return c.v.Unmarshal(rawVal)
 }
 
+// UnmarshalKey takes a single key and unmarshals it into a Struct.
 func UnmarshalKey(key string, rawVal interface{}) error {
 	return global.UnmarshalKey(key, rawVal)
 }
@@ -297,6 +314,8 @@ func (c *Config) UnmarshalKey(key string, rawVal interface{}) error {
 	return c.v.UnmarshalKey(key, rawVal)
 }
 
+// MergeConfigMap merges the configuration from the map given with an existing config.
+// Note that the map given may be modified.
 func MergeConfigMap(cfg map[string]interface{}) {
 	global.MergeConfigMap(cfg)
 }
@@ -307,11 +326,11 @@ func (c *Config) MergeConfigMap(cfg map[string]interface{}) {
 	_ = c.v.MergeConfigMap(cfg)
 }
 
+// Sub returns a new Config instance representing a sub tree of this instance.
+// Sub is case-insensitive for a key.
 func Sub(key string) *Config {
 	return global.Sub(key)
 }
-
-// Sub gets sub config
 func (c *Config) Sub(key string) *Config {
 	c.mut.RLock()
 	defer c.mut.RUnlock()
@@ -326,6 +345,10 @@ func (c *Config) Sub(key string) *Config {
 	return newConf
 }
 
+// Set sets the value for the key in the override register.
+// Set is case-insensitive for a key.
+// Will be used instead of values obtained via
+// flags, config file, ENV, default, or key/value store.
 func Set(key string, value interface{}) {
 	global.Set(key, value)
 }
@@ -336,6 +359,8 @@ func (c *Config) Set(key string, value interface{}) {
 	c.v.Set(key, value)
 }
 
+// Has checks to see if the key has been set in any of the data locations.
+// Has is case-insensitive for a key.
 func Has(key string) bool {
 	return global.Has(key)
 }

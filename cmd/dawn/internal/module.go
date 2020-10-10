@@ -9,6 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// Module command generates a new dawn module
 var Module = &cli.Command{
 	Name:      "module",
 	Aliases:   []string{"m"},

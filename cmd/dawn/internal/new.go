@@ -8,6 +8,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// NewProject command generates a new dawn project
 var NewProject = &cli.Command{
 	Name:      "new",
 	Aliases:   []string{"n"},

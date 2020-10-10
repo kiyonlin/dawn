@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -65,7 +64,7 @@ func runCmd(name string, arg ...string) (err error) {
 	}
 
 	if err = cmd.Wait(); err != nil {
-		err = errors.New(fmt.Sprintf("failed to run %s", cmd.String()))
+		err = fmt.Errorf("failed to run %s", cmd.String())
 	}
 
 	return

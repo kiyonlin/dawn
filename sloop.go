@@ -85,7 +85,7 @@ func (s *Sloop) Run(addr string) error {
 	return s.app.Listen(addr)
 }
 
-// Run runs a tls web server
+// RunTls runs a tls web server
 func (s *Sloop) RunTls(addr, certFile, keyFile string) error {
 	defer s.Cleanup()
 

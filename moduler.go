@@ -9,8 +9,9 @@ import (
 // Cleanup is a function does cleanup works
 type Cleanup func()
 
+// Moduler is the interface that wraps the module's method.
 type Moduler interface {
-	// Stringer indicates Module's name
+	// Stringer indicates module's name
 	fmt.Stringer
 
 	// Init does initialization works and should return
@@ -28,7 +29,14 @@ type Moduler interface {
 // and can be embedded into custom struct as a Moduler
 type Module struct{}
 
-func (Module) String() string              { return "anonymous" }
-func (Module) Init() Cleanup               { return nil }
-func (Module) Boot()                       {}
+// String indicates module's name
+func (Module) String() string { return "anonymous" }
+
+// Init does initialization works and should return a cleanup function.
+func (Module) Init() Cleanup { return nil }
+
+// Boot boots the module.
+func (Module) Boot() {}
+
+// RegisterRoutes add routes to fiber router
 func (Module) RegisterRoutes(fiber.Router) {}

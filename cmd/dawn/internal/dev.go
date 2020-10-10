@@ -19,9 +19,10 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// Dev command rerun the dawn project if watched files changed
 var Dev = &cli.Command{
 	Name:      "dev",
-	Usage:     "Rerun the dawn project if watched files change",
+	Usage:     "Rerun the dawn project if watched files changed",
 	UsageText: "dawn dev [options]",
 	Flags: []cli.Flag{
 		&cli.StringFlag{

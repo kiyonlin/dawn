@@ -10,8 +10,11 @@ import (
 	"github.com/gofiber/fiber/v2/utils"
 )
 
+// V is an instance of *validator.Validate
+// used for custom registrations.
+var V *validator.Validate
+
 var (
-	V     *validator.Validate
 	uni   *ut.UniversalTranslator
 	trans ut.Translator
 
