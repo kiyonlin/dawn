@@ -69,3 +69,16 @@ func runCmd(name string, arg ...string) (err error) {
 
 	return
 }
+
+func formatLatency(d time.Duration) time.Duration {
+	switch {
+	case d > time.Second:
+		return d.Truncate(time.Second / 100)
+	case d > time.Millisecond:
+		return d.Truncate(time.Millisecond / 100)
+	case d > time.Microsecond:
+		return d.Truncate(time.Microsecond / 100)
+	default:
+		return d
+	}
+}
