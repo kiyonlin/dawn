@@ -149,11 +149,17 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/kiyonlin/dawn"
+	"github.com/kiyonlin/dawn/config"
+	"github.com/kiyonlin/dawn/db/redis"
+	"github.com/kiyonlin/dawn/db/sql"
 	"github.com/kiyonlin/dawn/fiberx"
 )
 
 func main() {
-	sloop := dawn.Default()
+	config.Load("./")
+
+	sloop := dawn.Default().
+		AddModulers(sql.New(), redis.New())
 
 	router := sloop.Router()
 	// GET /  =>  Welcome to dawn 👋
