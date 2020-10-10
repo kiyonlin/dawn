@@ -249,6 +249,8 @@ func (e *escort) runBin() {
 
 	e.bin = execCommand(e.binPath)
 
+	e.bin.Env = os.Environ()
+
 	e.watchingPipes()
 
 	if err := e.bin.Start(); err != nil {
