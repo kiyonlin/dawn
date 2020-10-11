@@ -21,29 +21,31 @@ var NewProject = &cli.Command{
 			Usage: "create an application project",
 		},
 	},
-	Action: func(c *cli.Context) error {
-		if !c.Args().Present() {
-			return exit(c, "Missing project name")
-		}
-		start := time.Now()
+	Action: newAction,
+}
 
-		projectName := c.Args().First()
+func newAction(c *cli.Context) error {
+	if !c.Args().Present() {
+		return exit(c, "Missing project name")
+	}
+	start := time.Now()
 
-		modName := projectName
-		if c.Args().Len() > 1 {
-			modName = c.Args().Get(1)
-		}
+	projectName := c.Args().First()
 
-		dir, _ := os.Getwd()
+	modName := projectName
+	if c.Args().Len() > 1 {
+		modName = c.Args().Get(1)
+	}
 
-		projectPath := fmt.Sprintf("%s%c%s", dir, os.PathSeparator, projectName)
-		if err := createProject(projectPath, modName, c.Bool("app")); err != nil {
-			return exit(c, err)
-		}
+	dir, _ := os.Getwd()
 
-		return success(fmt.Sprintf(newSuccessTemplate,
-			projectPath, modName, projectName, formatLatency(time.Since(start))))
-	},
+	projectPath := fmt.Sprintf("%s%c%s", dir, os.PathSeparator, projectName)
+	if err := createProject(projectPath, modName, c.Bool("app")); err != nil {
+		return exit(c, err)
+	}
+
+	return success(fmt.Sprintf(newSuccessTemplate,
+		projectPath, modName, projectName, formatLatency(time.Since(start))))
 }
 
 func createProject(projectPath, modName string, isApp bool) (err error) {

@@ -15,24 +15,26 @@ var Module = &cli.Command{
 	Aliases:   []string{"m"},
 	Usage:     "Generate a new dawn module",
 	UsageText: "dawn module name",
-	Action: func(c *cli.Context) error {
-		if !c.Args().Present() {
-			return exit(c, "Missing module name")
-		}
-		now := time.Now()
+	Action:    moduleAction,
+}
 
-		name := c.Args().First()
+func moduleAction(c *cli.Context) error {
+	if !c.Args().Present() {
+		return exit(c, "Missing module name")
+	}
+	now := time.Now()
 
-		dir, _ := os.Getwd()
+	name := c.Args().First()
 
-		modulePath := fmt.Sprintf("%s%c%s", dir, os.PathSeparator, name)
-		if err := createModule(modulePath, name); err != nil {
-			return exit(c, err)
-		}
+	dir, _ := os.Getwd()
 
-		return success(fmt.Sprintf(moduleCreatedTemplate,
-			modulePath, name, formatLatency(time.Since(now))))
-	},
+	modulePath := fmt.Sprintf("%s%c%s", dir, os.PathSeparator, name)
+	if err := createModule(modulePath, name); err != nil {
+		return exit(c, err)
+	}
+
+	return success(fmt.Sprintf(moduleCreatedTemplate,
+		modulePath, name, formatLatency(time.Since(now))))
 }
 
 func createModule(modulePath, name string) (err error) {
