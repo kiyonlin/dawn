@@ -38,6 +38,7 @@ The libraries currently used are
 - [gorm](https://github.com/go-gorm/gorm)
 - [go-redis](https://github.com/go-redis/redis)
 - [validator](https://github.com/go-playground/validator)
+- [fsnotify](https://github.com/fsnotify/fsnotify)
 
 # Notice
 **This project is still under development, please do not use it in a production environment.**
