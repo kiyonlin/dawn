@@ -20,7 +20,7 @@ func Test_Moduler_Embed_Empty_Module(t *testing.T) {
 
 	assert.Equal(t, "anonymous", module.String())
 
-	assert.Nil(t, module.Init())
+	assert.NotNil(t, module.Init())
 
 	module.Boot()
 

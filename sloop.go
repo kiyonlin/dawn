@@ -25,11 +25,14 @@ type Sloop struct {
 	app      *fiber.App
 	mods     []Moduler
 	cleanups []Cleanup
+	sigCh    chan os.Signal
 }
 
 // New returns a new Sloop with options.
 func New(opts ...Option) *Sloop {
-	s := &Sloop{}
+	s := &Sloop{
+		sigCh: make(chan os.Signal, 1),
+	}
 
 	for _, opt := range opts {
 		opt(s)
@@ -64,7 +67,8 @@ func Default(cfg ...fiber.Config) *Sloop {
 	}
 
 	return &Sloop{
-		app: app,
+		app:   app,
+		sigCh: make(chan os.Signal, 1),
 	}
 }
 
@@ -166,11 +170,9 @@ func (s *Sloop) Cleanup() {
 
 // Watch listens to signal to exit
 func (s *Sloop) Watch() {
-	c := make(chan os.Signal, 1)
-
-	signal.Notify(c,
+	signal.Notify(s.sigCh,
 		syscall.SIGTERM, syscall.SIGINT,
 		syscall.SIGHUP, syscall.SIGQUIT)
 
-	<-c
+	<-s.sigCh
 }

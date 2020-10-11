@@ -1,6 +1,7 @@
 package dawn
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -106,4 +107,20 @@ func Test_Sloop_Router(t *testing.T) {
 
 	require.Nil(t, (&Sloop{}).Router())
 	require.NotNil(t, New(App(fiber.New())).Router())
+}
+
+func Test_Sloop_Watch(t *testing.T) {
+	t.Parallel()
+
+	s := &Sloop{
+		sigCh: make(chan os.Signal, 1),
+	}
+
+	go s.Watch()
+
+	select {
+	case s.sigCh <- os.Interrupt:
+	case <-time.NewTimer(time.Second).C:
+		assert.Fail(t, "should receive signal")
+	}
 }

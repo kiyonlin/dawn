@@ -33,7 +33,7 @@ type Module struct{}
 func (Module) String() string { return "anonymous" }
 
 // Init does initialization works and should return a cleanup function.
-func (Module) Init() Cleanup { return nil }
+func (Module) Init() Cleanup { return func() {} }
 
 // Boot boots the module.
 func (Module) Boot() {}
