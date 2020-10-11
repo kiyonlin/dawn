@@ -35,6 +35,7 @@
 - [gorm](https://github.com/go-gorm/gorm)
 - [go-redis](https://github.com/go-redis/redis)
 - [validator](https://github.com/go-playground/validator)
+- [fsnotify](https://github.com/fsnotify/fsnotify)
 
 # 注意
 **本项目还在开发中，请勿在生产环境中使用。**
