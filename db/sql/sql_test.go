@@ -86,6 +86,7 @@ func Test_Sql_connect(t *testing.T) {
 		c := config.New()
 		c.Set("Driver", "mysql")
 		c.Set("ParseTime", false)
+		c.Set("Testing", true)
 		connect("name", c)
 	})
 
@@ -97,6 +98,7 @@ func Test_Sql_connect(t *testing.T) {
 
 		c := config.New()
 		c.Set("Driver", "postgres")
+		c.Set("Testing", true)
 		connect("name", c)
 	})
 }

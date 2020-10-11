@@ -189,7 +189,7 @@ func resolveMysql(c *config.Config) (*gorm.DB, error) {
 	}
 
 	gdb, err := gorm.Open(mysql.Open(dsn), gormConfig)
-	if err == nil {
+	if err == nil || c.GetBool("Testing") {
 		db, err := gdb.DB()
 		if err != nil {
 			return gdb, err
@@ -240,7 +240,7 @@ func resolvePostgres(c *config.Config) (*gorm.DB, error) {
 	}
 
 	gdb, err := gorm.Open(postgres.Open(dsn), gormConfig)
-	if err == nil {
+	if err == nil || c.GetBool("Testing") {
 		db, err := gdb.DB()
 		if err != nil {
 			return gdb, err
