@@ -178,6 +178,7 @@ func (e *escort) watchingFiles() {
 
 			if info.IsDir() && isCreated(op) {
 				e.walkForWatcher(p)
+				e.hitCh <- struct{}{}
 				continue
 			}
 
