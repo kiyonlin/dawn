@@ -18,7 +18,7 @@ import (
 )
 
 // Version of current dawn package
-const Version = "0.3.5"
+const Version = "0.3.6"
 
 // Sloop denotes Dawn application
 type Sloop struct {
