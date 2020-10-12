@@ -6,23 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"time"
-
-	"github.com/urfave/cli/v2"
 )
-
-func exit(c *cli.Context, message interface{}) error {
-	if err := c.App.Run([]string{"dawn", "help", c.Command.Name}); err != nil {
-		return cli.Exit(err, 1)
-	}
-	fmt.Println()
-
-	msg := fmt.Sprintf("%s %s: %v", c.App.Name, c.Command.Name, message)
-	return cli.Exit(msg, 1)
-}
-
-func success(message interface{}) error {
-	return cli.Exit(message, 0)
-}
 
 func createFile(filePath, content string) (err error) {
 	var f *os.File

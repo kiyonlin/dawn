@@ -7,20 +7,21 @@ import (
 	"os"
 	"testing"
 
-	"github.com/urfave/cli/v2"
-
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 )
 
 func Test_Version_Printer(t *testing.T) {
+	at := assert.New(t)
 	t.Run("success", func(t *testing.T) {
 		httpmock.Activate()
 		defer httpmock.DeactivateAndReset()
 
 		httpmock.RegisterResponder(http.MethodGet, latestVersionUrl, httpmock.NewBytesResponder(200, fakeVersionResponse))
 
-		cli.VersionPrinter(nil)
+		out, err := runCobraCmd(VersionCmd)
+		at.Nil(err)
+		at.Contains(out, "v0.3.0")
 	})
 
 	t.Run("latest err", func(t *testing.T) {
@@ -29,7 +30,9 @@ func Test_Version_Printer(t *testing.T) {
 
 		httpmock.RegisterResponder(http.MethodGet, latestVersionUrl, httpmock.NewBytesResponder(200, []byte("no version")))
 
-		cli.VersionPrinter(nil)
+		out, err := runCobraCmd(VersionCmd)
+		at.Nil(err)
+		at.Contains(out, "no version")
 	})
 }
 

@@ -1,14 +1,12 @@
 package internal
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli/v2"
 )
 
 func Test_Module_Run(t *testing.T) {
@@ -19,35 +17,17 @@ func Test_Module_Run(t *testing.T) {
 			at.Nil(os.RemoveAll("testcase"))
 		}()
 
-		app := &cli.App{
-			Commands: []*cli.Command{Module},
-			ExitErrHandler: func(c *cli.Context, err error) {
-				at.Contains(err.Error(), "Done")
-			}}
+		out, err := runCobraCmd(ModuleCmd, "testcase")
 
-		at.NotNil(app.Run([]string{"bin", "module", "testcase"}))
-	})
-
-	t.Run("missing module name", func(t *testing.T) {
-		app := &cli.App{
-			Writer:   &bytes.Buffer{},
-			Commands: []*cli.Command{Module},
-			ExitErrHandler: func(c *cli.Context, err error) {
-				at.Contains(err.Error(), "Missing")
-			}}
-
-		at.NotNil(app.Run([]string{"bin", "module"}))
+		at.Nil(err)
+		at.Contains(out, "Done")
 	})
 
 	t.Run("invalid module name", func(t *testing.T) {
-		app := &cli.App{
-			Writer:   &bytes.Buffer{},
-			Commands: []*cli.Command{Module},
-			ExitErrHandler: func(c *cli.Context, err error) {
-				at.Contains(err.Error(), ".")
-			}}
+		out, err := runCobraCmd(ModuleCmd, ".")
 
-		at.NotNil(app.Run([]string{"bin", "module", "."}))
+		at.NotNil(err)
+		at.Contains(out, ".")
 	})
 }
 

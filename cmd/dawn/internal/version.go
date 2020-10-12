@@ -7,32 +7,34 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/urfave/cli/v2"
+	"github.com/spf13/cobra"
 )
 
-func init() {
-	cli.VersionFlag = &cli.BoolFlag{
-		Name: "version", Aliases: []string{"v"},
-		Usage: "print dawn version",
+// VersionCmd prints the version number of dawn
+var VersionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print the version number of dawn",
+	Long:  `All software has versions. This is dawn's.`,
+	Run:   versionRun,
+}
+
+func versionRun(cmd *cobra.Command, _ []string) {
+	var (
+		cur, latest string
+		err         error
+		w           = cmd.OutOrStdout()
+	)
+
+	if cur, err = currentVersion(); err != nil {
+		cur = err.Error()
 	}
 
-	cli.VersionPrinter = func(c *cli.Context) {
-		var (
-			cur, latest string
-			err         error
-		)
-
-		if cur, err = currentVersion(); err != nil {
-			cur = err.Error()
-		}
-
-		if latest, err = latestVersion(); err != nil {
-			fmt.Printf("dawn version: %v\n", err)
-			return
-		}
-
-		fmt.Printf("dawn version: %s(latest %s)\n", cur, latest)
+	if latest, err = latestVersion(); err != nil {
+		_, _ = fmt.Fprintf(w, "dawn version: %v\n", err)
+		return
 	}
+
+	_, _ = fmt.Fprintf(w, "dawn version: %s(latest %s)\n", cur, latest)
 }
 
 var currentVersionRegexp = regexp.MustCompile(`github\.com/kiyonlin/dawn*?\s+(.*)\n`)

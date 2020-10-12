@@ -6,35 +6,35 @@ import (
 	"strings"
 	"time"
 
-	"github.com/urfave/cli/v2"
+	"github.com/spf13/cobra"
 )
 
-// Module command generates a new dawn module
-var Module = &cli.Command{
-	Name:      "module",
-	Aliases:   []string{"m"},
-	Usage:     "Generate a new dawn module",
-	UsageText: "dawn module name",
-	Action:    moduleAction,
+// ModuleCmd generates a new dawn module
+var ModuleCmd = &cobra.Command{
+	Use:     "module NAME",
+	Aliases: []string{"m"},
+	Short:   "Generate a new dawn module",
+	Example: moduleExamples,
+	Args:    cobra.MinimumNArgs(1),
+	RunE:    moduleRunE,
 }
 
-func moduleAction(c *cli.Context) error {
-	if !c.Args().Present() {
-		return exit(c, "Missing module name")
-	}
+func moduleRunE(cmd *cobra.Command, args []string) (err error) {
 	now := time.Now()
 
-	name := c.Args().First()
+	name := args[0]
 
 	dir, _ := os.Getwd()
 
 	modulePath := fmt.Sprintf("%s%c%s", dir, os.PathSeparator, name)
 	if err := createModule(modulePath, name); err != nil {
-		return exit(c, err)
+		return err
 	}
 
-	return success(fmt.Sprintf(moduleCreatedTemplate,
-		modulePath, name, formatLatency(time.Since(now))))
+	cmd.Printf(moduleCreatedTemplate,
+		modulePath, name, formatLatency(time.Since(now)))
+
+	return
 }
 
 func createModule(modulePath, name string) (err error) {
@@ -143,4 +143,7 @@ Scaffolding module in %s
 
 🎊  Done in %s.
 `
+
+	moduleExamples = `  dawn module hello
+    Generates a new module dir named hello includes boilerplate code`
 )

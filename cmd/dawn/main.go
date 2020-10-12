@@ -2,36 +2,45 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/kiyonlin/dawn/cmd/dawn/internal"
-	"github.com/urfave/cli/v2"
+	"github.com/spf13/cobra"
 )
 
 const version = "v0.0.6"
 
 func init() {
-	cli.AppHelpTemplate = AppHelpTemplate
-	cli.CommandHelpTemplate = CommandHelpTemplate
-	cli.SubcommandHelpTemplate = SubcommandHelpTemplate
+	rootCmd.AddCommand(
+		internal.VersionCmd, internal.NewCmd, internal.ModuleCmd,
+		internal.DevCmd,
+	)
+}
+
+var rootCmd = &cobra.Command{
+	Use:   "dawn",
+	Short: "Dawn is an opinionated lightweight framework cli",
+	Long:  longDescription,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		return cmd.Help()
+	},
 }
 
 func main() {
-	run(os.Args, os.Stdout, os.Stderr)
-}
-
-func run(args []string, w io.Writer, ew io.Writer) {
-	app := &cli.App{
-		Version: version,
-		Commands: []*cli.Command{
-			internal.NewProject, internal.Module, internal.Dev,
-		},
-		Writer:    w,
-		ErrWriter: ew,
-	}
-
-	if err := app.Run(args); err != nil {
-		fmt.Println(err)
+	if err := run(); err != nil {
+		os.Exit(1)
 	}
 }
+
+func run() (err error) {
+	if err = rootCmd.Execute(); err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err)
+	}
+	return
+}
+
+const longDescription = `       __
+   ___/ /__ __    _____    dawn-cli ` + version + `
+ ~/ _  / _ '/ |/|/ / _ \~  For the opinionated lightweight framework dawn
+~~\_,_/\_,_/|__,__/_//_/~~ Visit https://github.com/kiyonlin/dawn for detail
+ ~~~  ~~ ~~~~~~~~~ ~~~~~~  (c) since 2020 by kiyon@gofiber.io`

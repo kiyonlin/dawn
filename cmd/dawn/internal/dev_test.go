@@ -3,7 +3,6 @@ package internal
 import (
 	"context"
 	"errors"
-	"flag"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -16,17 +15,12 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli/v2"
 )
 
 func Test_Dev_Escort_New(t *testing.T) {
 	t.Parallel()
 
-	ctx := cli.NewContext(
-		cli.NewApp(),
-		flag.NewFlagSet("test", 1),
-		nil)
-	assert.NotNil(t, newEscort(ctx))
+	assert.NotNil(t, newEscort(config{}))
 }
 
 func Test_Dev_Escort_Init(t *testing.T) {
@@ -277,8 +271,10 @@ func Test_Dev_IsChmoded(t *testing.T) {
 func getEscort() *escort {
 	c, t := context.WithCancel(context.Background())
 	return &escort{
-		root:      ".",
-		target:    ".",
+		config: config{
+			root:   ".",
+			target: ".",
+		},
 		ctx:       c,
 		terminate: t,
 	}

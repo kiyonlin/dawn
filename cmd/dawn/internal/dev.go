@@ -15,59 +15,39 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/fsnotify/fsnotify"
-	"github.com/urfave/cli/v2"
 )
 
-// Dev command rerun the dawn project if watched files changed
-var Dev = &cli.Command{
-	Name:      "dev",
-	Usage:     "Rerun the dawn project if watched files changed",
-	UsageText: "dawn dev [options]",
-	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:    "root",
-			Aliases: []string{"r"},
-			Usage:   "root path for watch, all files must be under root",
-			Value:   ".",
-		},
-		&cli.StringFlag{
-			Name:    "target",
-			Aliases: []string{"t"},
-			Usage:   "target path for go build",
-			Value:   ".",
-		},
-		&cli.StringSliceFlag{
-			Name:    "extensions",
-			Aliases: []string{"ext"},
-			Usage:   "file extensions to watch",
-			Value:   cli.NewStringSlice("go", "tmpl", "tpl", "html"),
-		},
-		&cli.StringSliceFlag{
-			Name:    "exclude_dirs",
-			Aliases: []string{"ed"},
-			Usage:   "ignore these directories",
-			Value:   cli.NewStringSlice("assets", "tmp", "vendor", "node_modules"),
-		},
-		&cli.StringSliceFlag{
-			Name:    "exclude_files",
-			Aliases: []string{"ef"},
-			Usage:   "ignore these files",
-			Value:   cli.NewStringSlice(),
-		},
-		&cli.DurationFlag{
-			Name:    "delay",
-			Aliases: []string{"d"},
-			Usage:   "delay to trigger rerun",
-			Value:   time.Second,
-		},
-	},
-	Action: func(c *cli.Context) error {
-		return newEscort(c).run()
-	},
+var c config
+
+func init() {
+	DevCmd.PersistentFlags().StringVarP(&c.root, "root", "r", ".",
+		"root path for watch, all files must be under root")
+	DevCmd.PersistentFlags().StringVarP(&c.target, "target", "t", ".",
+		"target path for go build")
+	DevCmd.PersistentFlags().StringSliceVarP(&c.extensions, "extensions", "e",
+		[]string{"go", "tmpl", "tpl", "html"}, "file extensions to watch")
+	DevCmd.PersistentFlags().StringSliceVarP(&c.excludeDirs, "exclude_dirs", "D",
+		[]string{"assets", "tmp", "vendor", "node_modules"}, "ignore these directories")
+	DevCmd.PersistentFlags().StringSliceVarP(&c.excludeFiles, "exclude_files", "F", nil, "ignore these files")
+	DevCmd.PersistentFlags().DurationVarP(&c.delay, "delay", "d", time.Second,
+		"delay to trigger rerun")
 }
 
-type escort struct {
+// DevCmd reruns the dawn project if watched files changed
+var DevCmd = &cobra.Command{
+	Use:   "dev",
+	Short: "Rerun the dawn project if watched files changed",
+	RunE:  devRunE,
+}
+
+func devRunE(_ *cobra.Command, _ []string) error {
+	return newEscort(c).run()
+}
+
+type config struct {
 	root         string
 	target       string
 	binPath      string
@@ -75,6 +55,10 @@ type escort struct {
 	excludeDirs  []string
 	excludeFiles []string
 	delay        time.Duration
+}
+
+type escort struct {
+	config
 
 	ctx       context.Context
 	terminate context.CancelFunc
@@ -84,6 +68,7 @@ type escort struct {
 	watcherErrors chan error
 	sig           chan os.Signal
 
+	binPath    string
 	bin        *exec.Cmd
 	stdoutPipe io.ReadCloser
 	stderrPipe io.ReadCloser
@@ -91,16 +76,11 @@ type escort struct {
 	hitFunc    func()
 }
 
-func newEscort(c *cli.Context) *escort {
+func newEscort(c config) *escort {
 	return &escort{
-		root:         c.String("root"),
-		target:       c.String("target"),
-		extensions:   c.StringSlice("extensions"),
-		excludeDirs:  c.StringSlice("exclude_dirs"),
-		excludeFiles: c.StringSlice("exclude_files"),
-		delay:        c.Duration("delay"),
-		hitCh:        make(chan struct{}, 1),
-		sig:          make(chan os.Signal, 1),
+		config: c,
+		hitCh:  make(chan struct{}, 1),
+		sig:    make(chan os.Signal, 1),
 	}
 }
 

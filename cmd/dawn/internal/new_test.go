@@ -1,12 +1,10 @@
 package internal
 
 import (
-	"bytes"
 	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/urfave/cli/v2"
 )
 
 func Test_New_Run(t *testing.T) {
@@ -21,13 +19,10 @@ func Test_New_Run(t *testing.T) {
 		setupCmd()
 		defer teardownCmd()
 
-		app := &cli.App{
-			Commands: []*cli.Command{NewProject},
-			ExitErrHandler: func(c *cli.Context, err error) {
-				at.Contains(err.Error(), "Done")
-			}}
+		out, err := runCobraCmd(NewCmd, "testcase")
 
-		at.NotNil(app.Run([]string{"bin", "new", "testcase"}))
+		at.Nil(err)
+		at.Contains(out, "Done")
 	})
 
 	t.Run("custom mod name", func(t *testing.T) {
@@ -39,16 +34,13 @@ func Test_New_Run(t *testing.T) {
 		setupCmd()
 		defer teardownCmd()
 
-		app := &cli.App{
-			Commands: []*cli.Command{NewProject},
-			ExitErrHandler: func(c *cli.Context, err error) {
-				at.Contains(err.Error(), "custom")
-			}}
+		out, err := runCobraCmd(NewCmd, "testcase", "custom")
 
-		at.NotNil(app.Run([]string{"bin", "new", "testcase", "custom"}))
+		at.Nil(err)
+		at.Contains(out, "custom")
 	})
 
-	t.Run("use --app", func(t *testing.T) {
+	t.Run("use --app and fail", func(t *testing.T) {
 		defer func() {
 			at.Nil(os.Chdir("../"))
 			at.Nil(os.RemoveAll("testcase"))
@@ -57,35 +49,16 @@ func Test_New_Run(t *testing.T) {
 		setupCmd(errFlag)
 		defer teardownCmd()
 
-		app := &cli.App{
-			Writer:   &bytes.Buffer{},
-			Commands: []*cli.Command{NewProject},
-			ExitErrHandler: func(c *cli.Context, err error) {
-				at.Contains(err.Error(), "failed to run")
-			}}
+		out, err := runCobraCmd(NewCmd, "testcase", "--app")
 
-		at.NotNil(app.Run([]string{"bin", "new", "--app", "testcase"}))
-	})
-
-	t.Run("missing project name", func(t *testing.T) {
-		app := &cli.App{
-			Writer:   &bytes.Buffer{},
-			Commands: []*cli.Command{NewProject},
-			ExitErrHandler: func(c *cli.Context, err error) {
-				at.Contains(err.Error(), "Missing")
-			}}
-
-		at.NotNil(app.Run([]string{"bin", "new"}))
+		at.NotNil(err)
+		at.Contains(out, "failed to run")
 	})
 
 	t.Run("invalid project name", func(t *testing.T) {
-		app := &cli.App{
-			Writer:   &bytes.Buffer{},
-			Commands: []*cli.Command{NewProject},
-			ExitErrHandler: func(c *cli.Context, err error) {
-				at.Contains(err.Error(), ".")
-			}}
+		out, err := runCobraCmd(NewCmd, ".")
 
-		at.NotNil(app.Run([]string{"bin", "new", "."}))
+		at.NotNil(err)
+		at.Contains(out, ".")
 	})
 }

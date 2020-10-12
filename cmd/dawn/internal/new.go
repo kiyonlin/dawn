@@ -6,46 +6,47 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/urfave/cli/v2"
+	"github.com/spf13/cobra"
 )
 
-// NewProject command generates a new dawn project
-var NewProject = &cli.Command{
-	Name:      "new",
-	Aliases:   []string{"n"},
-	Usage:     "Generate a new dawn project",
-	UsageText: "dawn new [options] project [mod name]",
-	Flags: []cli.Flag{
-		&cli.BoolFlag{
-			Name:  "app",
-			Usage: "create an application project",
-		},
-	},
-	Action: newAction,
+var isApp bool
+
+func init() {
+	NewCmd.PersistentFlags().BoolVarP(&isApp, "app", "a", false, "create an application project(default is web project)")
 }
 
-func newAction(c *cli.Context) error {
-	if !c.Args().Present() {
-		return exit(c, "Missing project name")
-	}
+// NewCmd generates a new dawn project
+var NewCmd = &cobra.Command{
+	Use:     "new PROJECT [module name]",
+	Aliases: []string{"n"},
+	Short:   "Generate a new dawn project",
+	Long:    "Generate a new dawn web/application project",
+	Example: newExamples,
+	Args:    cobra.MinimumNArgs(1),
+	RunE:    newRunE,
+}
+
+func newRunE(cmd *cobra.Command, args []string) error {
 	start := time.Now()
 
-	projectName := c.Args().First()
+	projectName := args[0]
 
 	modName := projectName
-	if c.Args().Len() > 1 {
-		modName = c.Args().Get(1)
+	if len(args) > 1 {
+		modName = args[1]
 	}
 
 	dir, _ := os.Getwd()
 
 	projectPath := fmt.Sprintf("%s%c%s", dir, os.PathSeparator, projectName)
-	if err := createProject(projectPath, modName, c.Bool("app")); err != nil {
-		return exit(c, err)
+	if err := createProject(projectPath, modName, isApp); err != nil {
+		return err
 	}
 
-	return success(fmt.Sprintf(newSuccessTemplate,
-		projectPath, modName, projectName, formatLatency(time.Since(start))))
+	cmd.Printf(newSuccessTemplate,
+		projectPath, modName, projectName, formatLatency(time.Since(start)))
+
+	return nil
 }
 
 func createProject(projectPath, modName string, isApp bool) (err error) {
@@ -147,7 +148,7 @@ Scaffolding project in %s (module %s)
 	newWebTemplate = `package main
 
 import (
-	"log"
+	"flag"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/kiyonlin/dawn"
@@ -155,10 +156,16 @@ import (
 	"github.com/kiyonlin/dawn/db/redis"
 	"github.com/kiyonlin/dawn/db/sql"
 	"github.com/kiyonlin/dawn/fiberx"
+	"github.com/kiyonlin/dawn/log"
 )
 
 func main() {
 	config.Load("./")
+	config.LoadEnv()
+
+	log.InitFlags(nil)
+	flag.Parse()
+	defer log.Flush()
 
 	sloop := dawn.Default().
 		AddModulers(sql.New(), redis.New())
@@ -169,7 +176,7 @@ func main() {
 		return fiberx.Message(c, "Welcome to dawn 👋")
 	})
 
-	log.Println(sloop.Run(":3000"))
+	log.Infoln(0, sloop.Run(":3000"))
 }
 `
 
@@ -292,4 +299,12 @@ PoolTimeout = "1m"
 IdleTimeout = "1m"
 IdleCheckFrequency = "1m"
 `
+	newExamples = `  dawn new dawn-demo
+    Generates a web project with go module name dawn-demo
+
+  dawn new dawn-demo github.com/kiyonlin/dawn-demo
+    Specific the go module name
+
+  dawn new dawn-demo --app
+    Generate an application project`
 )

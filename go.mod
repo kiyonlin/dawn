@@ -16,9 +16,9 @@ require (
 	github.com/kiyonlin/klog v1.1.1
 	github.com/klauspost/compress v1.11.1 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
+	github.com/spf13/cobra v1.0.0
 	github.com/spf13/viper v1.7.1
 	github.com/stretchr/testify v1.6.1
-	github.com/urfave/cli/v2 v2.2.0
 	github.com/valyala/bytebufferpool v1.0.0
 	github.com/valyala/fasthttp v1.16.0
 	golang.org/x/sys v0.0.0-20201009025420-dfb3f7c4e634 // indirect

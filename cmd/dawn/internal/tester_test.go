@@ -1,10 +1,13 @@
 package internal
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"testing"
+
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -59,4 +62,16 @@ func setupCmd(flag ...struct{}) {
 func teardownCmd() {
 	execCommand = exec.Command
 	needError = false
+}
+
+func runCobraCmd(cmd *cobra.Command, args ...string) (string, error) {
+	b := new(bytes.Buffer)
+
+	cmd.ResetCommands()
+	cmd.SetErr(b)
+	cmd.SetOut(b)
+	cmd.SetArgs(args)
+	err := cmd.Execute()
+
+	return b.String(), err
 }
