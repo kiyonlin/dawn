@@ -12,6 +12,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -74,6 +75,7 @@ type escort struct {
 	stderrPipe io.ReadCloser
 	hitCh      chan struct{}
 	hitFunc    func()
+	compiling  atomic.Value
 }
 
 func newEscort(c config) *escort {
@@ -210,6 +212,13 @@ func (e *escort) watchingBin() {
 }
 
 func (e *escort) runBin() {
+	if ok := e.compiling.Load(); ok != nil && ok.(bool) {
+		return
+	}
+
+	e.compiling.Store(true)
+	defer e.compiling.Store(false)
+
 	if e.bin != nil {
 		e.cleanOldBin()
 		log.Println("Recompiling...")

@@ -155,6 +155,12 @@ func Test_Dev_Escort_WatchingFiles(t *testing.T) {
 	e.watcherEvents <- fsnotify.Event{Name: name, Op: fsnotify.Remove}
 	e.watcherEvents <- fsnotify.Event{Name: name + "non", Op: fsnotify.Create}
 	e.watcherEvents <- fsnotify.Event{Name: newDir, Op: fsnotify.Create}
+	select {
+	case <-e.hitCh:
+	case <-time.NewTimer(time.Second).C:
+		at.Fail("should hit")
+	}
+
 	e.watcherEvents <- fsnotify.Event{Name: ignoredFile.Name(), Op: fsnotify.Create}
 	e.watcherEvents <- fsnotify.Event{Name: name, Op: fsnotify.Create}
 
