@@ -12,8 +12,7 @@ const version = "v0.0.6"
 
 func init() {
 	rootCmd.AddCommand(
-		internal.VersionCmd, internal.NewCmd, internal.ModuleCmd,
-		internal.DevCmd,
+		internal.VersionCmd, internal.NewCmd, internal.GenerateCmd, internal.DevCmd,
 	)
 }
 
