@@ -1,6 +1,7 @@
 package internal
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 
@@ -60,5 +61,43 @@ func Test_New_Run(t *testing.T) {
 
 		at.NotNil(err)
 		at.Contains(out, ".")
+	})
+}
+
+func Test_New_CreateConfigs(t *testing.T) {
+	assert.NotNil(t, createConfigs(" "))
+}
+
+func Test_New_InitGit(t *testing.T) {
+	at := assert.New(t)
+
+	t.Run("look path error", func(t *testing.T) {
+		setupLookPath(errFlag)
+		defer teardownLookPath()
+
+		at.Nil(initGit(""))
+	})
+
+	t.Run("failed to create .gitignore", func(t *testing.T) {
+		setupLookPath()
+		defer teardownLookPath()
+
+		at.NotNil(initGit(" "))
+	})
+
+	t.Run("failed to run command", func(t *testing.T) {
+		projectPath, err := ioutil.TempDir("", "test_new_init_git")
+		at.Nil(err)
+		defer func() {
+			at.Nil(os.RemoveAll(projectPath))
+		}()
+
+		setupLookPath()
+		defer teardownLookPath()
+
+		setupCmd(errFlag)
+		defer teardownCmd()
+
+		at.NotNil(initGit(projectPath))
 	})
 }

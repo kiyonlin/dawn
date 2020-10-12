@@ -100,9 +100,11 @@ func createConfigs(projectPath string) (err error) {
 	return
 }
 
+var execLookPath = exec.LookPath
+
 func initGit(projectPath string) (err error) {
 	var git string
-	if git, err = exec.LookPath("git"); err != nil {
+	if git, err = execLookPath("git"); err != nil {
 		return nil
 	}
 

@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -62,6 +63,19 @@ func setupCmd(flag ...struct{}) {
 func teardownCmd() {
 	execCommand = exec.Command
 	needError = false
+}
+
+func setupLookPath(flag ...struct{}) {
+	execLookPath = func(file string) (s string, err error) {
+		if len(flag) > 0 {
+			err = errors.New("fake look path error")
+		}
+		return
+	}
+}
+
+func teardownLookPath() {
+	execLookPath = exec.LookPath
 }
 
 func runCobraCmd(cmd *cobra.Command, args ...string) (string, error) {
