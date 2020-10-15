@@ -2,7 +2,7 @@
 name: "\U0001F680 Feature"
 about: Suggest an idea for this project
 title: "\U0001F680 "
-labels: 'Type: Feature'
+labels: 'feature'
 assignees: ''
 
 ---
