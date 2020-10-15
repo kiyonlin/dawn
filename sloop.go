@@ -21,12 +21,29 @@ const Version = "0.3.6"
 
 // Config is a struct holding the sloop settings.
 type Config struct {
+	// App indicates to fiber app instance
 	App *fiber.App
+
+	// Daemon indicates if dawn app run in daemon mode
+	Daemon bool
+	// Tries is the max count to start dawn app in daemon
+	// mode when error occurs. Default value is 10.
+	Tries int
+	// StdoutLogFile is the path to write stdout logs
+	// in daemon mode. If not set, all stdout logs is
+	// directed to os.Stdout
+	StdoutLogFile string
+	// StderrLogFile is the path to write stderr logs.
+	// in daemon mode. If not set, all stdout logs is
+	// directed to os.Stderr
+	StderrLogFile string
 }
 
 // Sloop denotes Dawn application
 type Sloop struct {
-	config   Config
+	// Config is the embedded config
+	Config
+
 	app      *fiber.App
 	mods     []Moduler
 	cleanups []Cleanup
@@ -40,10 +57,10 @@ func New(config ...Config) *Sloop {
 	}
 
 	if len(config) > 0 {
-		s.config = config[0]
+		s.Config = config[0]
 	}
 
-	s.app = s.config.App
+	s.app = s.Config.App
 
 	return s
 }
@@ -95,6 +112,10 @@ func (s *Sloop) Run(addr string) error {
 
 	s.Setup().registerRoutes()
 
+	if s.Daemon {
+		s.daemon()
+	}
+
 	return s.app.Listen(addr)
 }
 
@@ -122,6 +143,10 @@ func (s *Sloop) RunTls(addr, certFile, keyFile string) error {
 	}
 
 	s.Setup().registerRoutes()
+
+	if s.Daemon {
+		s.daemon()
+	}
 
 	return s.app.Listener(ln)
 }
@@ -177,6 +202,10 @@ func (s *Sloop) Cleanup() {
 
 // Watch listens to signal to exit
 func (s *Sloop) Watch() {
+	if s.Daemon {
+		s.daemon()
+	}
+
 	signal.Notify(s.sigCh,
 		syscall.SIGTERM, syscall.SIGINT,
 		syscall.SIGHUP, syscall.SIGQUIT)

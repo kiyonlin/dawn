@@ -51,7 +51,7 @@ func Test_Sloop_Run(t *testing.T) {
 
 	assert.NotNil(t, New().Run(""))
 
-	s := New(Config{fiber.New()}).AddModulers(m)
+	s := New(Config{App: fiber.New()}).AddModulers(m)
 
 	go func() {
 		time.Sleep(time.Millisecond * 100)
@@ -64,7 +64,7 @@ func Test_Sloop_Run(t *testing.T) {
 func Test_Sloop_RunTls(t *testing.T) {
 	assert.NotNil(t, New().RunTls("", "", ""))
 
-	s := New(Config{fiber.New()})
+	s := New(Config{App: fiber.New()})
 
 	t.Run("invalid addr", func(t *testing.T) {
 		t.Parallel()
@@ -94,14 +94,14 @@ func Test_Sloop_Shutdown(t *testing.T) {
 	t.Parallel()
 
 	require.NotNil(t, (&Sloop{}).Shutdown())
-	require.Nil(t, New(Config{fiber.New()}).Shutdown())
+	require.Nil(t, New(Config{App: fiber.New()}).Shutdown())
 }
 
 func Test_Sloop_Router(t *testing.T) {
 	t.Parallel()
 
 	require.Nil(t, (&Sloop{}).Router())
-	require.NotNil(t, New(Config{fiber.New()}).Router())
+	require.NotNil(t, New(Config{App: fiber.New()}).Router())
 }
 
 func Test_Sloop_Watch(t *testing.T) {
