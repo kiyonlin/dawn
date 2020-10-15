@@ -112,7 +112,7 @@ func (s *Sloop) Run(addr string) error {
 
 	s.Setup().registerRoutes()
 
-	if s.Daemon {
+	if config.GetBool("daemon.enable") {
 		s.daemon()
 	}
 
@@ -144,7 +144,7 @@ func (s *Sloop) RunTls(addr, certFile, keyFile string) error {
 
 	s.Setup().registerRoutes()
 
-	if s.Daemon {
+	if config.GetBool("daemon.enable") {
 		s.daemon()
 	}
 
@@ -202,7 +202,7 @@ func (s *Sloop) Cleanup() {
 
 // Watch listens to signal to exit
 func (s *Sloop) Watch() {
-	if s.Daemon {
+	if config.GetBool("daemon.enable") {
 		s.daemon()
 	}
 

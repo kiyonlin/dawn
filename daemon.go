@@ -4,31 +4,60 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
+
+	"github.com/kiyonlin/dawn/config"
 )
 
 const envDaemonKey = "ENV_DAWN_DAEMON"
-const envDaemonVal = "true"
 
-func (s *Sloop) daemon() (err error) {
-	return
+var count = daemonCount()
+
+func (s *Sloop) daemon() {
+	var (
+		cmd   *exec.Cmd
+		err   error
+		tries = 1
+	)
+
+	cmd, err = s.spawn()
+
+	for {
+		tries++
+		if cmd, err = s.spawn(); err != nil {
+			continue
+		}
+
+		if cmd == nil {
+			break
+		}
+
+		err = cmd.Wait()
+	}
 }
 
 func (s *Sloop) spawn() (cmd *exec.Cmd, err error) {
+	count++
+
+	if count <= daemonCount() {
+		return nil, nil
+	}
+
 	cmd = &exec.Cmd{
 		Path:        os.Args[0],
 		Args:        os.Args,
-		Env:         append(os.Environ(), fmt.Sprintf("%s=%s", envDaemonKey, envDaemonVal)),
+		Env:         append(os.Environ(), fmt.Sprintf("%s=%d", envDaemonKey, count)),
 		SysProcAttr: newSysProcAttr(),
 	}
 
-	if s.StdoutLogFile != "" {
-		if cmd.Stdout, err = os.OpenFile(s.StdoutLogFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600); err != nil {
+	if stdoutLogFile := config.GetString("daemon.stdoutLogFile"); stdoutLogFile != "" {
+		if cmd.Stdout, err = os.OpenFile(stdoutLogFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600); err != nil {
 			return
 		}
 	}
 
-	if s.StderrLogFile != "" {
-		if cmd.Stderr, err = os.OpenFile(s.StderrLogFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600); err != nil {
+	if stderrLogFile := config.GetString("daemon.stderrLogFile"); stderrLogFile != "" {
+		if cmd.Stderr, err = os.OpenFile(stderrLogFile, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600); err != nil {
 			return
 		}
 	}
@@ -37,13 +66,14 @@ func (s *Sloop) spawn() (cmd *exec.Cmd, err error) {
 		return
 	}
 
-	if !isDaemon() {
+	if daemonCount() == 0 {
 		os.Exit(0)
 	}
 
 	return
 }
 
-func isDaemon() bool {
-	return os.Getenv(envDaemonKey) == envDaemonVal
+func daemonCount() int {
+	c, _ := strconv.Atoi(os.Getenv(envDaemonKey))
+	return c
 }
