@@ -5,9 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/kiyonlin/dawn/config"
-
 	"github.com/gofiber/fiber/v2"
+	"github.com/kiyonlin/dawn/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,10 +20,7 @@ func Test_Sloop_New(t *testing.T) {
 
 	app := fiber.New()
 
-	s := New(
-		App(app),
-		Modulers(m),
-	)
+	s := New(Config{App: app}).AddModulers(m)
 
 	assert.Equal(t, app, s.app)
 	assert.Len(t, s.mods, 1)
@@ -44,9 +40,8 @@ func Test_Sloop_Default(t *testing.T) {
 func Test_Sloop_AddModulers(t *testing.T) {
 	t.Parallel()
 
-	s := New(App(fiber.New()))
+	s := New().AddModulers(m)
 
-	s.AddModulers(m)
 	assert.Len(t, s.mods, 1)
 	assert.Equal(t, "anonymous", s.mods[0].String())
 }
@@ -56,7 +51,7 @@ func Test_Sloop_Run(t *testing.T) {
 
 	assert.NotNil(t, New().Run(""))
 
-	s := New(App(fiber.New()), Modulers(m))
+	s := New(Config{fiber.New()}).AddModulers(m)
 
 	go func() {
 		time.Sleep(time.Millisecond * 100)
@@ -69,7 +64,7 @@ func Test_Sloop_Run(t *testing.T) {
 func Test_Sloop_RunTls(t *testing.T) {
 	assert.NotNil(t, New().RunTls("", "", ""))
 
-	s := New(App(fiber.New()))
+	s := New(Config{fiber.New()})
 
 	t.Run("invalid addr", func(t *testing.T) {
 		t.Parallel()
@@ -99,14 +94,14 @@ func Test_Sloop_Shutdown(t *testing.T) {
 	t.Parallel()
 
 	require.NotNil(t, (&Sloop{}).Shutdown())
-	require.Nil(t, New(App(fiber.New())).Shutdown())
+	require.Nil(t, New(Config{fiber.New()}).Shutdown())
 }
 
 func Test_Sloop_Router(t *testing.T) {
 	t.Parallel()
 
 	require.Nil(t, (&Sloop{}).Router())
-	require.NotNil(t, New(App(fiber.New())).Router())
+	require.NotNil(t, New(Config{fiber.New()}).Router())
 }
 
 func Test_Sloop_Watch(t *testing.T) {

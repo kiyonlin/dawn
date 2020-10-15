@@ -8,20 +8,25 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/kiyonlin/dawn/config"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/pprof"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/kiyonlin/dawn/config"
 	"github.com/kiyonlin/dawn/fiberx"
 )
 
 // Version of current dawn package
 const Version = "0.3.6"
 
+// Config is a struct holding the sloop settings.
+type Config struct {
+	App *fiber.App
+}
+
 // Sloop denotes Dawn application
 type Sloop struct {
+	config   Config
 	app      *fiber.App
 	mods     []Moduler
 	cleanups []Cleanup
@@ -29,14 +34,16 @@ type Sloop struct {
 }
 
 // New returns a new Sloop with options.
-func New(opts ...Option) *Sloop {
+func New(config ...Config) *Sloop {
 	s := &Sloop{
 		sigCh: make(chan os.Signal, 1),
 	}
 
-	for _, opt := range opts {
-		opt(s)
+	if len(config) > 0 {
+		s.config = config[0]
 	}
+
+	s.app = s.config.App
 
 	return s
 }
