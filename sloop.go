@@ -13,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/kiyonlin/dawn/config"
+	"github.com/kiyonlin/dawn/daemon"
 	"github.com/kiyonlin/dawn/fiberx"
 )
 
@@ -113,7 +114,7 @@ func (s *Sloop) Run(addr string) error {
 	s.Setup().registerRoutes()
 
 	if config.GetBool("daemon.enable") {
-		s.daemon()
+		daemon.Run()
 	}
 
 	return s.app.Listen(addr)
@@ -145,7 +146,7 @@ func (s *Sloop) RunTls(addr, certFile, keyFile string) error {
 	s.Setup().registerRoutes()
 
 	if config.GetBool("daemon.enable") {
-		s.daemon()
+		daemon.Run()
 	}
 
 	return s.app.Listener(ln)
@@ -203,7 +204,7 @@ func (s *Sloop) Cleanup() {
 // Watch listens to signal to exit
 func (s *Sloop) Watch() {
 	if config.GetBool("daemon.enable") {
-		s.daemon()
+		daemon.Run()
 	}
 
 	signal.Notify(s.sigCh,

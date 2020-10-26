@@ -1,5 +1,11 @@
 Debug = true
 
+[Daemon]
+Enable = true
+Tries = 5
+StdoutLogFile = "./app.log"
+StderrLogFile = "./app.err"
+
 [Sql]
 Default = "testing"
 

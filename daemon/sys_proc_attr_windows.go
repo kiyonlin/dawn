@@ -1,11 +1,11 @@
-// +build !windows,!plan9
+// +build windows
 
-package dawn
+package daemon
 
 import "syscall"
 
 func newSysProcAttr() *syscall.SysProcAttr {
 	return &syscall.SysProcAttr{
-		Setsid: true,
+		HideWindow: true,
 	}
 }
