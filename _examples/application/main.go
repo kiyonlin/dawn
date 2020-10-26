@@ -18,11 +18,12 @@ func main() {
 	flag.Parse()
 	defer log.Flush()
 
-	sloop := dawn.New(dawn.Modulers(
-		sql.New(),
-		redis.New(),
-		// add custom module
-	))
+	sloop := dawn.New().
+		AddModulers(
+			sql.New(),
+			redis.New(),
+			// add custom module
+		)
 
 	defer sloop.Cleanup()
 
