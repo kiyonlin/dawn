@@ -30,10 +30,12 @@ func Test_Dev_Escort_Init(t *testing.T) {
 
 	e := getEscort()
 	at.Nil(e.init())
+	defer func() {
+		_ = os.Remove(e.binPath)
+	}()
 
 	at.Contains(e.root, "internal")
 	at.NotEmpty(e.binPath)
-	at.Nil(os.Remove(e.binPath))
 }
 
 func Test_Dev_Escort_Run(t *testing.T) {
@@ -48,7 +50,7 @@ func Test_Dev_Escort_Run(t *testing.T) {
 	e.root, err = ioutil.TempDir("", "test_run")
 	at.Nil(err)
 	defer func() {
-		at.Nil(os.RemoveAll(e.root))
+		_ = os.RemoveAll(e.root)
 	}()
 
 	e.sig = make(chan os.Signal, 1)
