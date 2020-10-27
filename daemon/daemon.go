@@ -2,23 +2,24 @@ package daemon
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"time"
 
 	"github.com/kiyonlin/dawn/config"
 )
 
-const envDaemon = "DAWN_DAEMON=1"
-const envDaemonWorker = "DAWN_DAEMON_WORKER=1"
+const envDaemon = "DAWN_DAEMON"
+const envDaemonWorker = "DAWN_DAEMON_WORKER"
 
 var stdoutLogFile *os.File
 var stderrLogFile *os.File
+var osExit = os.Exit
 
 func Run() {
 	if isWorker() {
-		log.Println("I'm a worker")
 		return
 	}
 
@@ -30,12 +31,11 @@ func Run() {
 	setupLogFiles()
 	defer teardownLogFiles()
 
-	_, _ = stdoutLogFile.WriteString("xxxxxx")
-
 	var (
 		cmd    *exec.Cmd
 		err    error
 		count  int
+		start  time.Time
 		max    = config.GetInt("daemon.tries", 10)
 		logger = log.New(stderrLogFile, "", log.LstdFlags)
 	)
@@ -45,40 +45,46 @@ func Run() {
 			break
 		}
 
+		start = time.Now()
 		if cmd, err = spawn(false); err != nil {
 			continue
 		}
 
-		// reset count
-		count = 0
-
 		err = cmd.Wait()
 
-		logger.Printf("%s(pid:%d) exist with err: %v", cmd.Args[0], cmd.Process.Pid, err)
+		logger.Printf("dawn: (pid:%d)%v exist with err: %v", cmd.Process.Pid, cmd.Args, err)
+
+		if time.Since(start) > time.Second*10 {
+			// reset count
+			count = 0
+		}
 	}
 
-	logger.Printf("Already attempted %d times", max)
+	logger.Printf("dawn: already attempted %d times", max)
+
+	osExit(1)
 }
 
 func spawn(skip bool) (cmd *exec.Cmd, err error) {
-	if inDaemon() && skip {
-		log.Println("skip in daemon")
+	if isDaemon() && skip {
 		return
 	}
 
+	args, env := setupArgsAndEnv()
+
 	cmd = &exec.Cmd{
-		Path:        os.Args[0],
-		Args:        os.Args,
-		Env:         parseEnv(),
+		Path:        args[0],
+		Args:        args,
+		Env:         env,
 		SysProcAttr: newSysProcAttr(),
 	}
 
-	if inDaemon() {
-		if cmd.Stdout = ioutil.Discard; stdoutLogFile != nil {
+	if isDaemon() {
+		if stdoutLogFile != nil {
 			cmd.Stdout = stdoutLogFile
 		}
 
-		if cmd.Stderr = ioutil.Discard; stderrLogFile != nil {
+		if stderrLogFile != nil {
 			cmd.Stderr = stderrLogFile
 		}
 	}
@@ -87,29 +93,28 @@ func spawn(skip bool) (cmd *exec.Cmd, err error) {
 		return
 	}
 
-	log.Println("master process pid", cmd.Process.Pid)
-
 	// Exit main process
-	if !inDaemon() {
-		log.Println("exit main process")
-		os.Exit(0)
+	if !isDaemon() {
+		osExit(0)
 	}
 
 	return
 }
 
-func parseEnv() []string {
-	env := os.Environ()
-	if !inDaemon() {
-		env = append(env, envDaemon)
+func setupArgsAndEnv() ([]string, []string) {
+	args, env := os.Args, os.Environ()
+	if !isDaemon() {
+		args = append(args, "master process dawn")
+		env = append(env, envDaemon+"=")
 	} else if !isWorker() {
-		env = append(env, envDaemonWorker)
+		args[len(args)-1] = "worker process"
+		env = append(env, envDaemonWorker+"=")
 	}
 
-	return env
+	return args, env
 }
 
-func inDaemon() bool {
+func isDaemon() bool {
 	_, ok := os.LookupEnv(envDaemon)
 	return ok
 }
@@ -122,13 +127,13 @@ func isWorker() bool {
 func setupLogFiles() {
 	var err error
 	if f := config.GetString("daemon.stdoutLogFile"); f != "" {
-		if stdoutLogFile, err = os.OpenFile(f, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600); err != nil {
+		if stdoutLogFile, err = os.OpenFile(filepath.Clean(f), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600); err != nil {
 			panic(fmt.Sprintf("dawn: failed to open stdout log file %s: %s", f, err))
 		}
 	}
 
 	if f := config.GetString("daemon.stderrLogFile"); f != "" {
-		if stderrLogFile, err = os.OpenFile(f, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600); err != nil {
+		if stderrLogFile, err = os.OpenFile(filepath.Clean(f), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0600); err != nil {
 			panic(fmt.Sprintf("dawn: failed to open stderr log file %s: %s", f, err))
 		}
 	}
