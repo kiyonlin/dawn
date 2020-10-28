@@ -1,3 +1,5 @@
+This project is archived, please move to [go-dawn/dawn](https://github.com/go-dawn/dawn).
+
 # Dawn
 <p align="center">
   <a href="https://pkg.go.dev/github.com/kiyonlin/dawn?tab=doc">
